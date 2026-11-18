@@ -20,8 +20,8 @@
     ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
     ?home=0,1   position du bloc des enfants : x,y de 0 à 1 (0,1 = en bas à gauche ; 1,1 = en bas à droite)
     ?me=50,40   où est la streameuse à l'écran, en % (il se tourne vers elle pour le high five)
-    ?hf=20,56   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
-    ?front=39,97  où il pose les pieds pour le high five aux viewers (devant, en grand)
+    ?hf=32,40   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
+    ?front=27,75  où il pose les pieds pour le high five aux viewers (devant, en grand)
     ?test=1    fond bleu, état de la connexion et touches de test (pour un navigateur, pas pour OBS)
                 F = feed · C = cuddle · H = high five · 0-9 = jauge · + = +200 tokens
 
@@ -205,8 +205,8 @@ const CONFIG = {
   idleEverySec: [6, 12],
   foods: ["🍪", "🍓", "🧁", "🍩", "🍬"],
   streamerAt: { x: 50, y: 40 },   // où est la streameuse à l'écran, en % (ou ?me=50,40) : il se tourne vers elle
-  highFiveAt: { x: 20, y: 56 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=20,56)
-  frontAt:    { x: 39, y: 97 },   // où il pose les pieds pour taper dans la main des viewers (ou ?front=39,97)
+  highFiveAt: { x: 32, y: 40 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=32,40)
+  frontAt:    { x: 27, y: 75 },   // où il pose les pieds pour taper dans la main des viewers (ou ?front=27,75)
   frontZoom:  2,                  // combien de fois plus grand il devient en arrivant devant la caméra
   bubbles: {
     feed:     "<b>{user}</b> fed the kid 🍪",
