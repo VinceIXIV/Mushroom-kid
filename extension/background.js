@@ -8,10 +8,11 @@ const DEFAULTS = {
   heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
   // id : identifiant du réglage ; kid : quel enfant fait le high five (0 = 1er, chapeau crème ; 1 = 2e, chapeau vert d'eau)
   actions: [
+    // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
     { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
     { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
-    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 0 },
-    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 0 },
+    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
+    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
   ],
 };
 const APP = 'enfants-champignons';
@@ -104,7 +105,6 @@ function decide(tip, s) {
   // Ancien format sans repère « menu » : on cherche dans tout le texte du tip.
   const where = tip.menu ? norm(tip.comment) : (tip.menu === undefined ? norm(tip.text) : '');
   for (const a of s.actions) if (a.label && where && where.includes(norm(a.label))) return a;
-  for (const a of s.actions) if (Number(a.amount) > 0 && tip.amount === Number(a.amount)) return a; // montant exact
   return null;
 }
 
@@ -117,15 +117,17 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       const action = decide(msg, s);
       if (action) {
         let sent = false, error = '';
-        try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount: msg.amount }); sent = true; }
+        // la jauge avance du montant réglé dans l'extension pour cet item (pas du montant lu dans le chat)
+        const amount = Number(action.amount) || 0;
+        try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount }); sent = true; }
         catch (e) { error = e.message; }
-        await log({ user: msg.user, amount: msg.amount, item: msg.menu ? msg.comment : '', action: action.id, sent, error });
+        await log({ user: msg.user, amount, item: msg.menu ? msg.comment : '', action: action.id, sent, error });
       }
       reply({ ok: true });
     } else if (msg.type === 'simulate') {
       const a = s.actions.find((x) => x.id === msg.action);
       const ev = msg.action === 'reset' || !a ? { type: 'reset' }
-        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 30 };
+        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 0 };
       try { await sendToOBS(ev); await log({ user: ev.user || '—', amount: ev.amount || 0, action: msg.action, sent: true, simulated: true }); reply({ ok: true }); }
       catch (e) { reply({ ok: false, error: e.message }); }
     } else if (msg.type === 'reconnect') {

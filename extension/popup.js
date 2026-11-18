@@ -7,9 +7,9 @@ const TEXT = {
     triggers: 'Tip menu', itemFeed: 'Tip menu item "feed"', itemCuddle: 'Tip menu item "cuddle"',
     itemHf0: 'Item "high five", cream cap kid', itemHf1: 'Item "high five", mint cap kid', price: 'price (tk)',
     triggersHelp: '⚠️ Add these items to your Stripchat tip menu, with the same names as here. Emojis around the name and capitals don\'t matter. When a viewer tips one of them, the kids play that animation. Leave a name empty to turn it off.',
-    priceHelp: 'Price: a tip of exactly this amount also triggers it, even outside the tip menu (0 = off).',
+    priceHelp: 'Price: the price of this item in your tip menu. It is what each of these tips adds to the warmth gauge.',
     gauge: 'Warmth gauge', fullAt: 'The gauge is full (100%) at', tokens: 'tokens',
-    gaugeHelp: 'Each feed or cuddle tip adds its tokens to the gauge.',
+    gaugeHelp: 'Each tip menu animation adds its price (set above) to the gauge. On stream, the gauge shows the percentage of this total.',
     password: 'WebSocket password', port: 'Port', save: 'Save', saved: 'Saved ✓',
     latest: 'Latest animations', none: 'None yet.', test: '(test)', warmthReset: 'warmth reset',
     status: { '': 'not connected yet', 'connected': 'connected', 'connecting…': 'connecting…', 'wrong OBS password': 'wrong OBS password',
@@ -20,9 +20,9 @@ const TEXT = {
     triggers: 'Tip menu', itemFeed: 'Món tip menu "feed"', itemCuddle: 'Món tip menu "cuddle"',
     itemHf0: 'Món "high five", bé mũ kem', itemHf1: 'Món "high five", bé mũ xanh bạc hà', price: 'giá (tk)',
     triggersHelp: '⚠️ Hãy thêm các món này vào tip menu Stripchat của bạn, với đúng tên như ở đây. Có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Khi viewer tip một món, hai bé sẽ làm hoạt ảnh tương ứng. Để trống tên nếu không dùng món đó.',
-    priceHelp: 'Giá: tip đúng số token này cũng sẽ kích hoạt, kể cả ngoài tip menu (0 = tắt).',
+    priceHelp: 'Giá: giá của món này trong tip menu của bạn. Đó là số token mỗi tip này cộng vào thanh độ ấm.',
     gauge: 'Thanh độ ấm', fullAt: 'Thanh đầy (100%) khi đạt', tokens: 'token',
-    gaugeHelp: 'Mỗi tip feed hoặc cuddle cộng số token đó vào thanh.',
+    gaugeHelp: 'Mỗi hoạt ảnh từ tip menu cộng giá của món đó (ở trên) vào thanh. Trên stream, thanh hiện phần trăm so với tổng này.',
     password: 'Mật khẩu WebSocket', port: 'Cổng', save: 'Lưu', saved: 'Đã lưu ✓',
     latest: 'Hoạt ảnh gần đây', none: 'Chưa có.', test: '(thử)', warmthReset: 'đặt lại độ ấm',
     status: { '': 'chưa kết nối', 'connected': 'đã kết nối', 'connecting…': 'đang kết nối…', 'wrong OBS password': 'sai mật khẩu OBS',
@@ -49,8 +49,8 @@ document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('clic
 const DEFAULT_ACTIONS = [
   { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
   { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
-  { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 0 },
-  { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 0 },
+  { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
+  { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
 ];
 
 async function load() {
