@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mushroom Kids</title>
-<meta name="description" content="Hai bé nấm bông cho màn hình stream: xem mọi trạng thái, rồi tự cho hai bé ăn và ôm hai bé.">
+<meta name="description" content="Một bé nấm bông cho màn hình stream: xem mọi trạng thái, rồi tự cho bé ăn, ôm bé và đập tay với bé.">
 <!--
   Page GitHub Pages. Chaque aperçu est le vrai overlay.html (sans OBS), piloté par postMessage.
   Onglet « All states » : tous les états côte à côte. Onglet « Live example » : on joue soi-même.
@@ -40,6 +40,7 @@
 
   /* Un aperçu de l'overlay */
   .screen { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--stage); }
+  .screen .me { position: absolute; left: 41%; top: 18%; width: 28%; height: 82%; border-radius: 50% 50% 0 0 / 30% 30% 0 0; background: rgba(255,255,255,.07); border: 2px dashed rgba(255,255,255,.18); border-bottom: 0; }
   .screen iframe { position: absolute; left: 0; top: 0; width: 480px; height: 360px; border: 0; transform-origin: 0 0; pointer-events: none; }
 
   /* Onglet 1 : tous les états */
@@ -150,7 +151,7 @@
       <button data-lang="vi" title="Tiếng Việt" aria-label="Tiếng Việt"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#DA251D"/><polygon fill="#FF0" points="15,4 16.76,9.43 22.47,9.43 17.85,12.79 19.61,18.21 15,14.86 10.39,18.21 12.15,12.79 7.53,9.43 13.24,9.43"/></svg></button>
     </div>
   </header>
-  <p class="lead"><span data-l="vi">Hai bé nấm bông sống ở góc dưới màn hình stream. Viewer cho hai bé ăn, ôm hai bé và đập tay với hai bé qua tip menu, và mỗi lần tip lại làm hai bé ấm lên.</span><span data-l="en">Two fluffy mushroom kids who live at the bottom of the stream. Viewers feed them, cuddle them and high-five them with the tip menu, and every tip warms them up.</span></p>
+  <p class="lead"><span data-l="vi">Một bé nấm bông sống ở góc dưới màn hình stream. Viewer cho bé ăn, ôm bé và đập tay với bé qua tip menu, và mỗi lần tip lại làm bé ấm lên.</span><span data-l="en">One fluffy mushroom who lives at the bottom of the stream. Viewers feed it, cuddle it and high-five it with the tip menu, and every tip warms it up.</span></p>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-states" aria-controls="states" aria-selected="true"><span data-l="vi">Tất cả trạng thái</span><span data-l="en">All states</span></button>
@@ -176,12 +177,11 @@
           <label for="user"><span data-l="vi">Tên người tip</span><span data-l="en">Tipper name</span></label>
           <input type="text" id="user" value="LuckyTipper" maxlength="24" autocomplete="off">
           <div class="row">
-            <button class="big feed" data-type="feed">🍪 Feed the kids <small>25 tk · <kbd>F</kbd></small></button>
-            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>50 tk · <kbd>C</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="0">✋ Bibi high five <small>40 tk · <kbd>H</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="1">✋ Pouic high five <small>40 tk · <kbd>J</kbd></small></button>
+            <button class="big feed" data-type="feed">🍪 Feed the kid <small>25 tk · <kbd>F</kbd></small></button>
+            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kid <small>50 tk · <kbd>C</kbd></small></button>
+            <button class="big hf" data-type="highfive">✋ High five <small>40 tk · <kbd>H</kbd></small></button>
           </div>
-          <p class="hint"><span data-l="vi">Bấm phím <kbd>F</kbd>, <kbd>C</kbd>, <kbd>H</kbd> hoặc <kbd>J</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, hai bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy ra giữa màn hình để đập tay.</span><span data-l="en">Press <kbd>F</kbd>, <kbd>C</kbd>, <kbd>H</kbd> or <kbd>J</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn. This frame is like the whole stream screen: the kid hops to the middle of the screen for the high five.</span></p>
+          <p class="hint"><span data-l="vi">Bấm phím <kbd>F</kbd>, <kbd>C</kbd> hoặc <kbd>H</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: vùng tròn mờ là chỗ của bạn, bé nhảy tới đó để đập tay.</span><span data-l="en">Press <kbd>F</kbd>, <kbd>C</kbd> or <kbd>H</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn. This frame is like the whole stream screen: the faint rounded shape is you, and the mushroom hops there for the high five.</span></p>
         </div>
 
         <div class="card">
@@ -198,7 +198,7 @@
             <li><span data-l="vi">Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> trong tip menu mới làm thanh đầy lên, theo giá của món: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle, <b>+40</b> mỗi lần high five trong ví dụ này.</span><span data-l="en">Only the <b>Feed</b>, <b>Cuddle</b> and <b>high five</b> tip menu items fill it, by their price: <b>+25</b> per feed, <b>+50</b> per cuddle, <b>+40</b> per high five in this example.</span></li>
             <li><span data-l="vi">Thanh <b>đầy khi đạt 2000 token</b>. Streamer tự chọn con số này và giá của từng món.</span><span data-l="en">It is <b>full at 2000 tokens</b>. The streamer chooses this number and the price of each item.</span></li>
             <li><span data-l="vi">Thanh <b>không bao giờ tự giảm</b>. Streamer làm trống thanh khi muốn, ví dụ lúc bắt đầu stream.</span><span data-l="en">It <b>never goes down</b> by itself. The streamer empties it whenever she wants, for example at the start of a stream.</span></li>
-            <li><span data-l="vi">Càng ấm, hai bé trông càng vui lúc chờ. Dưới 10% thì hai bé bị lạnh và run.</span><span data-l="en">The warmer they are, the happier they look while waiting. Below 10% they get cold and shiver.</span></li>
+            <li><span data-l="vi">Càng ấm, bé trông càng vui lúc chờ. Dưới 10% thì bé bị lạnh và run.</span><span data-l="en">The warmer it is, the happier it looks while waiting. Below 10% it gets cold and shivers.</span></li>
           </ul>
 
           <input type="range" id="slider" min="0" max="100" value="45" aria-label="">
@@ -270,14 +270,14 @@
       <!-- 4 -->
       <div class="card">
         <h2><span class="num">4</span> <span data-l="vi">Nối tiện ích với OBS</span><span data-l="en">Connect the extension to OBS</span></h2>
-        <p class="muted"><span data-l="vi">Tiện ích đọc chat Stripchat của bạn. Khi có người tip một món của hai bé, nó báo cho OBS qua WebSocket. Ở bước này, bạn cho tiện ích biết mật khẩu để nó được phép nói chuyện với OBS.</span><span data-l="en">The extension reads your Stripchat chat. When someone tips one of the kids’ items, it tells OBS through the WebSocket. In this step, you give the extension the password so it is allowed to talk to OBS.</span></p>
+        <p class="muted"><span data-l="vi">Tiện ích đọc chat Stripchat của bạn. Khi có người tip một món của bé, nó báo cho OBS qua WebSocket. Ở bước này, bạn cho tiện ích biết mật khẩu để nó được phép nói chuyện với OBS.</span><span data-l="en">The extension reads your Stripchat chat. When someone tips one of the mushroom’s items, it tells OBS through the WebSocket. In this step, you give the extension the password so it is allowed to talk to OBS.</span></p>
         <ol class="sub">
           <li><span data-l="vi">Bấm biểu tượng <b>M</b> (Mushroom Kids) cạnh thanh địa chỉ của Chrome. Bấm <b>lá cờ Việt Nam</b> ở góc trên bên phải để chuyển tiện ích sang tiếng Việt.</span><span data-l="en">Click the <b>M</b> icon (Mushroom Kids) next to Chrome’s address bar. The flags in the top right corner switch the extension between English and Vietnamese.</span>
             <img class="shot" loading="lazy" src="captures/extension-1.png" alt="">
             <p class="muted"><span data-l="vi">Trong tiện ích có:</span><span data-l="en">In the extension you find:</span></p>
             <ul>
               <li><span data-l="vi"><b>Dòng trên cùng</b>: tiện ích đã kết nối với OBS chưa. Lúc đầu nó ghi <b>chưa kết nối</b>, như vậy là bình thường.</span><span data-l="en"><b>The top line</b>: whether the extension is connected to OBS. At first it says <b>not connected yet</b>, which is normal.</span></li>
-              <li><span data-l="vi"><b>Thử</b>: các nút để làm hai bé chạy hoạt ảnh mà không cần tip thật (dùng ở bước 7).</span><span data-l="en"><b>Try it</b>: buttons that play the animations without a real tip (used in step 7).</span></li>
+              <li><span data-l="vi"><b>Thử</b>: các nút để làm bé chạy hoạt ảnh mà không cần tip thật (dùng ở bước 7).</span><span data-l="en"><b>Try it</b>: buttons that play the animations without a real tip (used in step 7).</span></li>
               <li><span data-l="vi"><b>Tip menu</b>: tên và giá của các món (dùng ở bước 6). Trong ảnh chỉ là ví dụ.</span><span data-l="en"><b>Tip menu</b>: the names and prices of the items (used in step 6). The picture is only an example.</span></li>
             </ul></li>
           <li><span data-l="vi">Kéo xuống phần <b>OBS</b>. Dán mật khẩu bạn đã giữ ở bước 3 vào ô <b>Mật khẩu WebSocket</b> (bấm vào ô rồi <b>Ctrl+V</b>). Không đổi ô <b>Cổng</b> (4455). Bấm <b>Lưu</b>.</span><span data-l="en">Scroll down to the <b>OBS</b> section. Paste the password you kept in step 3 into <b>WebSocket password</b> (click the box, then <b>Ctrl+V</b>). Leave <b>Port</b> as it is (4455). Click <b>Save</b>.</span>
@@ -290,14 +290,14 @@
 
       <!-- 5 -->
       <div class="card">
-        <h2><span class="num">5</span> <span data-l="vi">Thêm hai bé vào OBS</span><span data-l="en">Add the kids to OBS</span></h2>
-        <p class="muted"><span data-l="vi">Hai bé là một <b>nguồn Browser</b> (Trình duyệt) trong OBS: OBS mở trang của hai bé như một <b>lớp trong suốt</b> đặt lên trên hình stream của bạn. Trang này cũng cần mật khẩu WebSocket để nghe tiện ích.</span><span data-l="en">The kids are a <b>Browser source</b> in OBS: OBS opens the kids’ page as a <b>transparent layer</b> on top of your stream picture. This page also needs the WebSocket password to listen to the extension.</span></p>
+        <h2><span class="num">5</span> <span data-l="vi">Thêm bé vào OBS</span><span data-l="en">Add the mushroom to OBS</span></h2>
+        <p class="muted"><span data-l="vi">Bé là một <b>nguồn Browser</b> (Trình duyệt) trong OBS: OBS mở trang của bé như một <b>lớp trong suốt</b> đặt lên trên hình stream của bạn. Trang này cũng cần mật khẩu WebSocket để nghe tiện ích.</span><span data-l="en">The mushroom is a <b>Browser source</b> in OBS: OBS opens its page as a <b>transparent layer</b> on top of your stream picture. This page also needs the WebSocket password to listen to the extension.</span></p>
 
         <p><b><span data-l="vi">5a. Tạo địa chỉ cho OBS</span><span data-l="en">5a. Make the address for OBS</span></b></p>
         <div class="urlbox">
           <label for="pw"><span data-l="vi">Dán mật khẩu WebSocket bạn đã giữ ở bước 3</span><span data-l="en">Paste the WebSocket password you kept in step 3</span></label>
           <input type="password" id="pw" autocomplete="off">
-          <label for="corner"><span data-l="vi">Hai bé ngồi ở góc nào của màn hình?</span><span data-l="en">Which corner of the screen should the kids sit in?</span></label>
+          <label for="corner"><span data-l="vi">Bé ngồi ở góc nào của màn hình?</span><span data-l="en">Which corner of the screen should the mushroom sit in?</span></label>
           <select id="corner">
             <option value="0,1"></option>
             <option value="1,1"></option>
@@ -325,11 +325,11 @@
 
         <p><b><span data-l="vi">5c. Kiểm tra</span><span data-l="en">5c. Check</span></b></p>
         <ol class="sub">
-          <li><span data-l="vi">Hai bé xuất hiện ở góc dưới màn hình, với thanh độ ấm. Nền trong suốt: bạn vẫn thấy camera phía sau.</span><span data-l="en">The kids appear in the bottom corner of the screen, with the warmth gauge. The background is transparent: you still see your camera behind them.</span>
+          <li><span data-l="vi">Bé xuất hiện ở góc dưới màn hình, với thanh độ ấm. Nền trong suốt: bạn vẫn thấy camera phía sau.</span><span data-l="en">The mushroom appears in the bottom corner of the screen, with the warmth gauge. The background is transparent: you still see your camera behind it.</span>
             <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
-          <li><span data-l="vi"><b>Không thấy hai bé?</b> Trong ô <b>Sources</b>, nguồn <b>Mushroom Kids</b> phải nằm <b>trên</b> nguồn camera của bạn. Kéo nó lên đầu danh sách.</span><span data-l="en"><b>Can’t see the kids?</b> In the <b>Sources</b> box, the <b>Mushroom Kids</b> source must be <b>above</b> your camera source. Drag it to the top of the list.</span></li>
-          <li><span data-l="vi"><b>Đừng kéo giãn hay thu nhỏ</b> khung đỏ của nguồn này: nó phải phủ cả màn hình, vì hai bé sẽ nhảy ra giữa màn hình khi có high five. Nếu lỡ kéo: chuột phải vào nguồn → <b>Transform</b> (Biến đổi) → <b>Fit to screen</b> (Vừa màn hình).</span><span data-l="en"><b>Don’t stretch or shrink</b> the red frame of this source: it must cover the whole screen, because the kids hop to the middle of the screen for a high five. If you moved it by mistake: right-click the source → <b>Transform</b> → <b>Fit to screen</b>.</span></li>
-          <li><span data-l="vi">Muốn hai bé ở góc khác? Chọn góc khác ở 5a, sao chép địa chỉ mới, rồi chuột phải vào nguồn → <b>Properties</b> và dán vào ô URL.</span><span data-l="en">Want the kids in another corner? Pick another corner in 5a, copy the new address, then right-click the source → <b>Properties</b> and paste it into URL.</span></li>
+          <li><span data-l="vi"><b>Không thấy bé?</b> Trong ô <b>Sources</b>, nguồn <b>Mushroom Kids</b> phải nằm <b>trên</b> nguồn camera của bạn. Kéo nó lên đầu danh sách.</span><span data-l="en"><b>Can’t see the mushroom?</b> In the <b>Sources</b> box, the <b>Mushroom Kids</b> source must be <b>above</b> your camera source. Drag it to the top of the list.</span></li>
+          <li><span data-l="vi"><b>Đừng kéo giãn hay thu nhỏ</b> khung đỏ của nguồn này: nó phải phủ cả màn hình, vì bé sẽ nhảy tới chỗ bạn và lại gần camera khi có high five. Nếu lỡ kéo: chuột phải vào nguồn → <b>Transform</b> (Biến đổi) → <b>Fit to screen</b> (Vừa màn hình).</span><span data-l="en"><b>Don’t stretch or shrink</b> the red frame of this source: it must cover the whole screen, because the mushroom hops over to you and towards the camera for a high five. If you moved it by mistake: right-click the source → <b>Transform</b> → <b>Fit to screen</b>.</span></li>
+          <li><span data-l="vi">Muốn bé ở góc khác? Chọn góc khác ở 5a, sao chép địa chỉ mới, rồi chuột phải vào nguồn → <b>Properties</b> và dán vào ô URL.</span><span data-l="en">Want the mushroom in another corner? Pick another corner in 5a, copy the new address, then right-click the source → <b>Properties</b> and paste it into URL.</span></li>
         </ol>
       </div>
 
@@ -338,23 +338,22 @@
         <h2><span class="num">6</span> <span data-l="vi">Thêm các món vào tip menu Stripchat</span><span data-l="en">Add the items to your Stripchat tip menu</span></h2>
         <p><span data-l="vi">Thêm các món này vào tip menu của bạn, với giá bạn muốn:</span><span data-l="en">Add these items to your tip menu, at the price you want:</span></p>
         <table>
-          <tr><td>Feed the kids</td><td><span data-l="vi">hai bé ăn</span><span data-l="en">the kids eat</span> 🍪</td></tr>
-          <tr><td>Cuddle the kids</td><td><span data-l="vi">hai bé ôm nhau</span><span data-l="en">the kids hug</span> 🤗</td></tr>
-          <tr><td>Bibi high five</td><td><span data-l="vi">bé mũ kem đập tay với bạn</span><span data-l="en">the cream cap kid high-fives you</span> ✋</td></tr>
-          <tr><td>Pouic high five</td><td><span data-l="vi">bé mũ xanh bạc hà đập tay với bạn</span><span data-l="en">the mint cap kid high-fives you</span> ✋</td></tr>
+          <tr><td>Feed the kid</td><td><span data-l="vi">bé ăn</span><span data-l="en">the mushroom eats</span> 🍪</td></tr>
+          <tr><td>Cuddle the kid</td><td><span data-l="vi">bé tự ôm mình</span><span data-l="en">the mushroom hugs itself</span> 🤗</td></tr>
+          <tr><td>High five</td><td><span data-l="vi">bé đập tay với bạn, rồi với viewer</span><span data-l="en">the mushroom high-fives you, then the viewers</span> ✋</td></tr>
         </table>
         <div class="warn">⚠️ <span data-l="vi"><b>Tên món trong tip menu phải giống tên trong tiện ích</b> (phần <b>Tip menu</b> trong tiện ích). Bạn có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Nếu bạn đổi tên một món, hãy đổi giống vậy trong tiện ích rồi bấm <b>Lưu</b>.</span><span data-l="en"><b>The item names in your tip menu must match the names in the extension</b> (its <b>Tip menu</b> section). You can add emojis around the name, and capitals don’t matter. If you rename an item, rename it the same way in the extension and click <b>Save</b>.</span></div>
-        <p><span data-l="vi">Trong tiện ích, ở ô <b>giá (tk)</b> cạnh mỗi món, hãy điền <b>đúng giá của món đó trong tip menu</b>. Mỗi lần món được tip, số token này được cộng vào <b>thanh độ ấm</b> của hai bé. Thanh đầy khi đạt <b>2000 token</b> (bạn có thể đổi con số này trong tiện ích, phần <b>Thanh độ ấm</b>), và trên stream thanh hiện phần trăm. Nhớ bấm <b>Lưu</b>.</span><span data-l="en">In the extension, in the <b>price (tk)</b> box next to each item, enter <b>that item’s price in your tip menu</b>. Each time the item is tipped, this many tokens are added to the kids’ <b>warmth gauge</b>. The gauge is full at <b>2000 tokens</b> (you can change this number in the extension, <b>Warmth gauge</b> section), and on stream it shows a percentage. Remember to click <b>Save</b>.</span></p>
+        <p><span data-l="vi">Trong tiện ích, ở ô <b>giá (tk)</b> cạnh mỗi món, hãy điền <b>đúng giá của món đó trong tip menu</b>. Mỗi lần món được tip, số token này được cộng vào <b>thanh độ ấm</b> của bé. Thanh đầy khi đạt <b>2000 token</b> (bạn có thể đổi con số này trong tiện ích, phần <b>Thanh độ ấm</b>), và trên stream thanh hiện phần trăm. Nhớ bấm <b>Lưu</b>.</span><span data-l="en">In the extension, in the <b>price (tk)</b> box next to each item, enter <b>that item’s price in your tip menu</b>. Each time the item is tipped, this many tokens are added to the mushroom’s <b>warmth gauge</b>. The gauge is full at <b>2000 tokens</b> (you can change this number in the extension, <b>Warmth gauge</b> section), and on stream it shows a percentage. Remember to click <b>Save</b>.</span></p>
       </div>
 
       <!-- 7 -->
       <div class="card">
         <h2><span class="num">7</span> <span data-l="vi">Thử</span><span data-l="en">Try it</span></h2>
         <ol class="sub">
-          <li><span data-l="vi">Trong tiện ích, bấm <b>🍪 Feed</b>: hai bé ăn trong OBS. Thử cả <b>🤗 Cuddle</b>, <b>✋ 1</b> và <b>✋ 2</b>.</span><span data-l="en">In the extension, click <b>🍪 Feed</b>: the kids eat in OBS. Try <b>🤗 Cuddle</b>, <b>✋ 1</b> and <b>✋ 2</b> too.</span>
+          <li><span data-l="vi">Trong tiện ích, bấm <b>🍪 Feed</b>: bé ăn trong OBS. Thử cả <b>🤗 Cuddle</b> và <b>✋ High five</b>.</span><span data-l="en">In the extension, click <b>🍪 Feed</b>: the mushroom eats in OBS. Try <b>🤗 Cuddle</b> and <b>✋ High five</b> too.</span>
             <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
           <li><span data-l="vi">Mở trang stream Stripchat của bạn trong Chrome. Nếu trang đã mở từ trước khi cài tiện ích, bấm <b>F5</b> để tải lại.</span><span data-l="en">Open your Stripchat stream page in Chrome. If it was already open before you installed the extension, press <b>F5</b> to reload it.</span></li>
-          <li><span data-l="vi">Khi có người tip một món, hai bé sẽ phản ứng, và tip đó hiện trong <b>Hoạt ảnh gần đây</b> của tiện ích.</span><span data-l="en">When someone tips one of the items, the kids react, and the tip shows in the extension under <b>Latest animations</b>.</span></li>
+          <li><span data-l="vi">Khi có người tip một món, bé sẽ phản ứng, và tip đó hiện trong <b>Hoạt ảnh gần đây</b> của tiện ích.</span><span data-l="en">When someone tips one of the items, the mushroom reacts, and the tip shows in the extension under <b>Latest animations</b>.</span></li>
         </ol>
         <div class="ok">🎉 <span data-l="vi">Xong rồi! <b>Mỗi lần stream</b>, chỉ cần mở OBS, và mở trang Stripchat của bạn trong Chrome (để tab đó mở suốt buổi stream).</span><span data-l="en">All done! <b>Every stream</b>, just open OBS, and open your Stripchat page in Chrome (keep that tab open for the whole stream).</span></div>
       </div>
@@ -366,18 +365,18 @@
           <p><span data-l="vi">Sao chép lại mật khẩu ở bước 3, dán vào tiện ích và bấm <b>Lưu</b>. Nếu bạn đã đổi mật khẩu trong OBS, hãy tạo lại địa chỉ ở bước 5 và dán lại vào nguồn Mushroom Kids.</span><span data-l="en">Copy the password again in step 3, paste it into the extension and click <b>Save</b>. If you changed the password in OBS, make the address again in step 5 and paste it into the Mushroom Kids source.</span></p></details>
         <details><summary><span data-l="vi">Tiện ích ghi "không kết nối được với OBS"</span><span data-l="en">The extension says "cannot reach OBS"</span></summary>
           <p><span data-l="vi">OBS phải đang mở, và WebSocket phải được bật (bước 3). Sau đó bấm nút <b>↻</b> trong tiện ích.</span><span data-l="en">OBS must be open, and the WebSocket must be on (step 3). Then click the <b>↻</b> button in the extension.</span></p></details>
-        <details><summary><span data-l="vi">Có tip nhưng hai bé không phản ứng</span><span data-l="en">Someone tipped but the kids don’t react</span></summary>
+        <details><summary><span data-l="vi">Có tip nhưng bé không phản ứng</span><span data-l="en">Someone tipped but the mushroom doesn’t react</span></summary>
           <p><span data-l="vi">Kiểm tra tên món trong tip menu có giống tên trong tiện ích không (bước 6). Bấm <b>F5</b> trên trang Stripchat. Trang Stripchat phải được mở trong Chrome có tiện ích.</span><span data-l="en">Check that the item name in your tip menu matches the name in the extension (step 6). Press <b>F5</b> on the Stripchat page. The Stripchat page must be open in the Chrome that has the extension.</span></p></details>
-        <details><summary><span data-l="vi">Hai bé không hiện trong OBS</span><span data-l="en">The kids don’t show in OBS</span></summary>
+        <details><summary><span data-l="vi">Bé không hiện trong OBS</span><span data-l="en">The mushroom doesn’t show in OBS</span></summary>
           <p><span data-l="vi">Chuột phải vào nguồn Mushroom Kids → <b>Properties</b>: kiểm tra địa chỉ trong ô URL, rồi bấm <b>Refresh</b> (Làm mới).</span><span data-l="en">Right-click the Mushroom Kids source → <b>Properties</b>: check the address in URL, then click <b>Refresh</b>.</span></p></details>
-        <details><summary><span data-l="vi">Hai bé ngồi sai chỗ</span><span data-l="en">The kids sit in the wrong place</span></summary>
+        <details><summary><span data-l="vi">Bé ngồi sai chỗ</span><span data-l="en">The mushroom sits in the wrong place</span></summary>
           <p><span data-l="vi">Chọn góc khác ở bước 5, sao chép địa chỉ mới và dán lại vào nguồn Mushroom Kids.</span><span data-l="en">Pick another corner in step 5, copy the new address and paste it into the Mushroom Kids source.</span></p></details>
       </div>
 
       <!-- Désinstaller -->
       <div class="card">
         <h2>🧹 <span data-l="vi">Gỡ bỏ</span><span data-l="en">Uninstall</span></h2>
-        <p><span data-l="vi">Muốn bỏ hai bé? Chỉ mất một phút, mọi thứ trở lại như cũ:</span><span data-l="en">Want to remove the kids? It takes a minute, and everything goes back to how it was:</span></p>
+        <p><span data-l="vi">Muốn bỏ bé đi? Chỉ mất một phút, mọi thứ trở lại như cũ:</span><span data-l="en">Want to remove the mushroom? It takes a minute, and everything goes back to how it was:</span></p>
         <ol class="sub">
           <li><span data-l="vi">Vào <code>chrome://extensions</code>, bấm <b>Remove</b> (Xoá) ở thẻ Mushroom Kids.</span><span data-l="en">Go to <code>chrome://extensions</code> and click <b>Remove</b> on the Mushroom Kids card.</span></li>
           <li><span data-l="vi">Trong OBS, chọn nguồn Mushroom Kids và xoá nó.</span><span data-l="en">In OBS, select the Mushroom Kids source and delete it.</span></li>
@@ -387,7 +386,7 @@
     </div>
   </section>
 
-  <footer><span data-l="vi">Khi stream, nền trong suốt: hai bé nằm trên hình camera, ở chỗ streamer đặt trong OBS. Mọi chữ viewer nhìn thấy trên stream đều bằng tiếng Anh.</span><span data-l="en">On stream, the background is transparent: the kids sit on top of the camera, wherever the streamer places them in OBS. Everything viewers see on stream is in English.</span></footer>
+  <footer><span data-l="vi">Khi stream, nền trong suốt: bé nằm trên hình camera, ở chỗ streamer đặt trong OBS. Mọi chữ viewer nhìn thấy trên stream đều bằng tiếng Anh.</span><span data-l="en">On stream, the background is transparent: the mushroom sits on top of the camera, wherever the streamer places it in OBS. Everything viewers see on stream is in English.</span></footer>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -397,18 +396,19 @@ const OVERLAY = "overlay.html?obs=0&names=0";
 
 /* Les humeurs : mêmes seuils que CONFIG.moods dans overlay.html */
 const MOODS = [
-  { key: "cold",     name: "Cold",     from: 0,  to: 10,  pct: 0,  text: { vi: "Hai bé phụng phịu và run lên. Đến lúc tip rồi!", en: "They pout and shiver. Time for a tip!" } },
-  { key: "neutral",  name: "Neutral",  from: 10, to: 45,  pct: 30, text: { vi: "Hai bé thở nhẹ, chớp mắt và chơi đùa với nhau.", en: "They breathe, blink and play little games together." } },
+  { key: "cold",     name: "Cold",     from: 0,  to: 10,  pct: 0,  text: { vi: "Bé phụng phịu và run lên. Đến lúc tip rồi!", en: "It pouts and shivers. Time for a tip!" } },
+  { key: "neutral",  name: "Neutral",  from: 10, to: 45,  pct: 30, text: { vi: "Bé thở nhẹ, chớp mắt, nhìn quanh và thỉnh thoảng nhảy nhẹ.", en: "It breathes, blinks, looks around and hops a little now and then." } },
   { key: "comfy",    name: "Comfy",    from: 45, to: 60,  pct: 52, text: { vi: "Cười rộng hơn, má hồng hơn, thở chậm và thư thái hơn.", en: "A wider smile, pinker cheeks and slower, calmer breathing." } },
   { key: "cosy",     name: "Cosy",     from: 60, to: 70,  pct: 65, text: { vi: "Cười hé miệng, má hồng hào và vài tia lấp lánh.", en: "A little open smile, rosy cheeks and a few sparkles." } },
-  { key: "happy",    name: "Happy",    from: 70, to: 90,  pct: 80, text: { vi: "Cười thật tươi, nhún nhảy và chơi với nhau nhiều hơn.", en: "Big smiles, a bouncy step, and they play more often." } },
+  { key: "happy",    name: "Happy",    from: 70, to: 90,  pct: 80, text: { vi: "Cười thật tươi, nhún nhảy và nhảy nhót nhiều hơn.", en: "Big smiles, a bouncy step, and more little hops." } },
   { key: "blissful", name: "Blissful", short: "Bliss", from: 90, to: 100, pct: 96, text: { vi: "Thỉnh thoảng nhắm mắt cười ^^, và có tim nhỏ bay lên.", en: "Happy ^^ eyes now and then, and little hearts floating up." } },
 ];
 const TIPS = [
-  { type: "feed",   name: "🍪 Feed the kids",   user: "LuckyTipper", every: 9000, text: { vi: "Đồ ăn rơi xuống, hai bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip.", en: "Food drops, they munch, then their cheeks glow. The bubble shows who tipped." } },
-  { type: "cuddle", name: "🤗 Cuddle the kids", user: "SweetViewer", every: 8000, text: { vi: "Hai bé nghiêng vào ôm nhau và tim bay lên. Bong bóng hiện tên người tip.", en: "They lean in for a hug and hearts float up. The bubble shows who tipped." } },
-  { type: "highfive", name: "✋ Bibi high five · Pouic high five", user: "HappyFan", every: 9000, wide: true,
-    text: { vi: "Mỗi bé có một món riêng trong tip menu. Bé được tip nhảy lò cò ra giữa màn hình, giơ bàn tay nhỏ về phía camera để đập tay với bạn, rồi nhảy về chỗ cũ. Hai bé lần lượt làm ở đây.", en: "Each kid has its own tip menu item. The tipped kid hops to the middle of the screen, turns to you and raises a little hand to the camera for your high five, then hops back. Here they take turns." } },
+  { type: "feed",   name: "🍪 Feed the kid",   user: "LuckyTipper", every: 9000, text: { vi: "Đồ ăn rơi xuống, bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip.", en: "Food drops, it munches, then its cheeks glow. The bubble shows who tipped." } },
+  { type: "cuddle", name: "🤗 Cuddle the kid", user: "SweetViewer", every: 8000, text: { vi: "Bé dùng hai bàn tay nhỏ ôm lấy mình, má ửng hồng và tim bay lên. Bong bóng hiện tên người tip.", en: "It hugs itself with its two little hands, its cheeks glow and hearts float up. The bubble shows who tipped." } },
+  { type: "highfive", name: "✋ High five", user: "HappyFan", every: 14000, wide: true,
+    text: { vi: "Bé nhảy lò cò tới chỗ bạn, quay về phía bạn và giơ bàn tay nhỏ để đập tay với bạn. Rồi bé tiến lại gần camera, to dần lên, đập tay với viewer, và nhảy về chỗ cũ. Vùng tròn mờ là chỗ của bạn trên màn hình.",
+            en: "It hops over to you, turns to you and raises its little hand for your high five. Then it comes closer to the camera, growing bigger, high-fives the viewers, and hops back home. The faint rounded shape is you on screen." } },
 ];
 
 /* Un aperçu = le vrai overlay dans un iframe, mis à l'échelle */
@@ -418,11 +418,16 @@ function makePreview(box, onLoad, w = 480, h = 360) {
   const frame = document.createElement("iframe");
   frame.title = "Mushroom Kids overlay";
   // écran 16:9 réduit : la streameuse imaginaire à droite du centre, le high five à côté d'elle
-  frame.src = OVERLAY + (w > 480 ? "&me=72,38&hf=55,62" : "");
+  frame.src = OVERLAY + (w > 480 ? "&me=55,40&hf=33,64&front=46,97" : "&home=0.5,1");
   frame.style.width = w + "px";
   frame.style.height = h + "px";
   box.style.aspectRatio = `${w} / ${h}`;
   box.appendChild(frame);
+  if (w > 480) {   // silhouette de la streameuse, pour comprendre où il va
+    const me = document.createElement("div");
+    me.className = "me";
+    box.prepend(me);
+  }
   previews.push({ box, frame, w });
   const send = (msg) => frame.contentWindow.postMessage({ app: APP, ...msg }, "*");
   frame.addEventListener("load", () => onLoad && onLoad(send));
@@ -447,10 +452,9 @@ function buildStates() {
   };
   TIPS.forEach(t => {
     const box = card(document.getElementById("gridTips"), t.name, { vi: `lặp lại mỗi ${t.every / 1000} giây`, en: `replays every ${t.every / 1000} s` }, t.text, t.wide);
-    let turn = 0;   // high five : les deux enfants à tour de rôle
     makePreview(box, send => {
       send({ type: "set", pct: 40 });
-      const play = () => send({ type: t.type, user: t.user, amount: 0, kid: turn++ % 2 });
+      const play = () => send({ type: t.type, user: t.user, amount: 0 });
       setTimeout(play, 800);
       setInterval(play, t.every);
     }, t.wide ? 960 : 480, t.wide ? 540 : 360);
@@ -479,8 +483,7 @@ addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if (k === "f") tip("feed");
   if (k === "c") tip("cuddle");
-  if (k === "h") tip("highfive", 0);
-  if (k === "j") tip("highfive", 1);
+  if (k === "h") tip("highfive");
 });
 const slider = document.getElementById("slider");
 slider.addEventListener("input", () => live && live.send({ type: "set", pct: Number(slider.value) }));

@@ -4,3 +4,6 @@ presentation/email-*.txt
 # Fichiers temporaires
 __pycache__/
 *.pyc
+
+# Photo de la streameuse : ne jamais publier
+captures/explain.png

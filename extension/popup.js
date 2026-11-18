@@ -5,7 +5,7 @@ const TEXT = {
   en: {
     reconnect: 'Reconnect to OBS', tryIt: 'Try it', bubbleName: 'Name shown in the bubble', resetWarmth: 'Reset warmth',
     triggers: 'Tip menu', itemFeed: 'Tip menu item "feed"', itemCuddle: 'Tip menu item "cuddle"',
-    itemHf0: 'Item "high five", cream cap kid', itemHf1: 'Item "high five", mint cap kid', price: 'price (tk)',
+    itemHf0: 'Tip menu item "high five"', price: 'price (tk)',
     triggersHelp: '⚠️ Add these items to your Stripchat tip menu, with the same names as here. Emojis around the name and capitals don\'t matter. When a viewer tips one of them, the kids play that animation. Leave a name empty to turn it off.',
     priceHelp: 'Price: the price of this item in your tip menu. It is what each of these tips adds to the warmth gauge.',
     gauge: 'Warmth gauge', fullAt: 'The gauge is full (100%) at', tokens: 'tokens',
@@ -18,7 +18,7 @@ const TEXT = {
   vi: {
     reconnect: 'Kết nối lại với OBS', tryIt: 'Thử', bubbleName: 'Tên hiện trong bong bóng', resetWarmth: 'Đặt lại độ ấm',
     triggers: 'Tip menu', itemFeed: 'Món tip menu "feed"', itemCuddle: 'Món tip menu "cuddle"',
-    itemHf0: 'Món "high five", bé mũ kem', itemHf1: 'Món "high five", bé mũ xanh bạc hà', price: 'giá (tk)',
+    itemHf0: 'Món tip menu "high five"', price: 'giá (tk)',
     triggersHelp: '⚠️ Hãy thêm các món này vào tip menu Stripchat của bạn, với đúng tên như ở đây. Có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Khi viewer tip một món, hai bé sẽ làm hoạt ảnh tương ứng. Để trống tên nếu không dùng món đó.',
     priceHelp: 'Giá: giá của món này trong tip menu của bạn. Đó là số token mỗi tip này cộng vào thanh độ ấm.',
     gauge: 'Thanh độ ấm', fullAt: 'Thanh đầy (100%) khi đạt', tokens: 'token',
@@ -47,10 +47,9 @@ document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('clic
 
 // Mêmes réglages par défaut que background.js
 const DEFAULT_ACTIONS = [
-  { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
-  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
-  { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
-  { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
+  { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
+  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
+  { id: 'hf0',    type: 'highfive', label: 'High five',      amount: 40 },
 ];
 
 async function load() {
@@ -84,7 +83,7 @@ function showStatus(text) {
 }
 
 function showLog(log = []) {
-  const LABELS = { feed: '🍪 feed', cuddle: '🤗 cuddle', hf0: '✋ high five 1', hf1: '✋ high five 2', reset: t('warmthReset') };
+  const LABELS = { feed: '🍪 feed', cuddle: '🤗 cuddle', hf0: '✋ high five', reset: t('warmthReset') };
   const ul = $('log');
   ul.innerHTML = '';
   if (!log.length) { const li = document.createElement('li'); li.innerHTML = '<small></small>'; li.firstChild.textContent = t('none'); ul.appendChild(li); return; }
