@@ -160,7 +160,9 @@
   .mhand svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
   .mhand.left { left: auto; right: 70%; transform-origin: 60% 100%; }
   .mhand.left svg { transform: scaleX(-1); }
-  .mhand.hug { top: 52%; }   /* câlin : les deux petites mains serrent le pied */
+  /* câlin : les deux petites mains posées sur les joues, façon kawaii */
+  .mhand.hug { left: 60%; top: 63%; z-index: 3; }
+  .mhand.hug.left { left: auto; right: 60%; }
   .impact { width: 24px; height: 24px; border-radius: 50%; border: 4px solid #fff; box-sizing: border-box; z-index: 11; animation: impact .55s ease-out forwards; }
   @keyframes impact { from { transform: scale(.3); opacity: 1; } to { transform: scale(4.5); opacity: 0; } }
   .mini  { font-size: 13px; animation: float 1.8s ease-out forwards; }
@@ -205,7 +207,7 @@ const CONFIG = {
   streamerAt: { x: 50, y: 40 },   // où est la streameuse à l'écran, en % (ou ?me=50,40) : il se tourne vers elle
   highFiveAt: { x: 20, y: 60 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=20,60)
   frontAt:    { x: 39, y: 97 },   // où il pose les pieds pour taper dans la main des viewers (ou ?front=39,97)
-  frontSize:  .38,                // sa taille devant la caméra, en part de la hauteur de l'écran
+  frontZoom:  2,                  // combien de fois plus grand il devient en arrivant devant la caméra
   bubbles: {
     feed:     "<b>{user}</b> fed the kid 🍪",
     cuddle:   "<b>{user}</b> cuddled the kid 💕",
@@ -471,7 +473,7 @@ async function playCuddle({ user, amount }) {
   showBubble("cuddle", user);
   const el = kidEls[0];
   el.classList.add("cuddle");
-  // ses deux petites mains viennent serrer son pied
+  // ses deux petites mains viennent se poser sur ses joues, puis tapotent doucement (trop mignon)
   const hands = [false, true].map(left => {
     const h = document.createElement("div");
     h.className = "mhand hug" + (left ? " left" : "");
@@ -479,9 +481,13 @@ async function playCuddle({ user, amount }) {
     el.appendChild(h);
     const sg = left ? -1 : 1;
     h.animate([
-      { transform: `translate(${-6 * sg}px, 16px) scale(0) rotate(${40 * sg}deg)` },
-      { transform: `translate(${-20 * sg}px, 0) scale(.9) rotate(${-55 * sg}deg)` },
-    ], { duration: 450, easing: "ease-out", fill: "forwards" });
+      { transform: `translate(${10 * sg}px, 22px) scale(0) rotate(${30 * sg}deg)` },
+      { transform: `translate(0, 0) scale(.9) rotate(${-16 * sg}deg)` },
+    ], { duration: 450, easing: "cubic-bezier(.3,1.4,.6,1)", fill: "forwards" }).finished.then(() => h.animate([
+      { transform: `translate(0, 0) scale(.9) rotate(${-16 * sg}deg)` },
+      { transform: `translate(${-2 * sg}px, -3px) scale(.93,.87) rotate(${-20 * sg}deg)` },
+      { transform: `translate(0, 0) scale(.9) rotate(${-16 * sg}deg)` },
+    ], { duration: 700, iterations: 4, easing: "ease-in-out" }));
     return h;
   });
   addHeat(amount);
@@ -492,10 +498,14 @@ async function playCuddle({ user, amount }) {
     await wait(500);
   }
   await wait(400);
-  hands.forEach((h, i) => h.animate([
-    { transform: `translate(${-20 * (i ? -1 : 1)}px, 0) scale(.9) rotate(${-55 * (i ? -1 : 1)}deg)` },
-    { transform: `translate(${-6 * (i ? -1 : 1)}px, 16px) scale(0) rotate(${40 * (i ? -1 : 1)}deg)` },
-  ], { duration: 300, easing: "ease-in", fill: "forwards" }).finished.then(() => h.remove()));
+  hands.forEach((h, i) => {
+    const sg = i ? -1 : 1;
+    h.getAnimations().forEach(a => a.cancel());
+    h.animate([
+      { transform: `translate(0, 0) scale(.9) rotate(${-16 * sg}deg)` },
+      { transform: `translate(${10 * sg}px, 22px) scale(0) rotate(${30 * sg}deg)` },
+    ], { duration: 300, easing: "ease-in", fill: "forwards" }).finished.then(() => h.remove());
+  });
   el.classList.remove("cuddle");
   resetPoses();
   await wait(500);
@@ -527,7 +537,10 @@ async function hopTravel(el, x0, y0, x1, y1, z0 = 1, z1 = 1) {
   const frames = [];
   for (let h = 0; h < hops; h++) {
     for (let k = 0; k < 8; k++) {
-      const f = k / 8, p = (h + f) / hops, z = z0 + (z1 - z0) * p;
+      // la taille suit une perspective : il grossit de plus en plus vite en approchant de la caméra
+      // (et au retour, il rapetisse d'abord vite puis plus doucement)
+      const f = k / 8, p = (h + f) / hops;
+      const z = z0 + (z1 - z0) * (z1 >= z0 ? Math.pow(p, 1.7) : 1 - Math.pow(1 - p, 1.7));
       const lift = Math.sin(Math.PI * f) * 34 * z;
       const squash = k === 0 ? "scale(1.06,.92)" : "scale(1,1)";
       frames.push({ transform: `${place(x0 + (x1 - x0) * p, y0 + (y1 - y0) * p - lift, z)} rotate(${k === 0 ? 0 : tilt}deg) ${squash}` });
@@ -601,7 +614,7 @@ async function playHighFive({ user, amount }) {
   const foot = { x: r.left + r.width / 2, y: r.bottom };          // ses pieds, à sa place
   const to = (p) => ({ x: p.x - foot.x, y: p.y - foot.y });         // décalage jusqu'à un point de l'écran
   const a = to(highFiveSpot()), b = to(frontSpot());
-  const zoom = Math.max(1, innerHeight * CONFIG.frontSize / r.height);
+  const zoom = CONFIG.frontZoom;
   el.style.zIndex = 9;
 
   // 1. il sautille jusqu'à la streameuse, la tête tournée vers où il va…
