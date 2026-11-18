@@ -5,13 +5,14 @@
 const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
+  heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
   // id : identifiant du réglage ; kid : quel enfant fait le high five (0 = 1er, chapeau crème ; 1 = 2e, chapeau vert d'eau)
   actions: [
-    // amount : de combien de % chaque tip de cet item fait avancer la jauge de chaleur
-    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 2 },
-    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 4 },
-    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 3 },
-    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 3 },
+    // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
+    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
+    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
+    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
+    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
   ],
 };
 const APP = 'enfants-champignons';
@@ -79,13 +80,13 @@ async function connect() {
   return ready;
 }
 
-// La jauge compte en % : chaque événement dit à l'overlay que 100 = jauge pleine.
+// Chaque événement porte aussi le réglage de la jauge : l'overlay le retient.
 async function sendToOBS(eventData) {
   await connect();
-  const heatMax = 100;
+  const { heatMax } = await getSettings();
   ws.send(JSON.stringify({
     op: 6,
-    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax, ...eventData } } },
+    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax: Number(heatMax) || 2000, ...eventData } } },
   }));
 }
 
@@ -116,7 +117,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       const action = decide(msg, s);
       if (action) {
         let sent = false, error = '';
-        // la jauge avance du % réglé dans l'extension pour cet item (pas du montant lu dans le chat)
+        // la jauge avance du montant réglé dans l'extension pour cet item (pas du montant lu dans le chat)
         const amount = Number(action.amount) || 0;
         try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount }); sent = true; }
         catch (e) { error = e.message; }

@@ -130,10 +130,10 @@
           <label for="user">Tên người tip</label>
           <input type="text" id="user" value="LuckyTipper" maxlength="24" autocomplete="off">
           <div class="row">
-            <button class="big feed" data-type="feed">🍪 Feed the kids <small>+2% · <kbd>F</kbd></small></button>
-            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>+4% · <kbd>C</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="0">✋ Bibi high five <small>+3% · <kbd>H</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="1">✋ Pouic high five <small>+3% · <kbd>J</kbd></small></button>
+            <button class="big feed" data-type="feed">🍪 Feed the kids <small>25 tk · <kbd>F</kbd></small></button>
+            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>50 tk · <kbd>C</kbd></small></button>
+            <button class="big hf" data-type="highfive" data-kid="0">✋ Bibi high five <small>40 tk · <kbd>H</kbd></small></button>
+            <button class="big hf" data-type="highfive" data-kid="1">✋ Pouic high five <small>40 tk · <kbd>J</kbd></small></button>
           </div>
           <p class="hint">Bấm phím <kbd>F</kbd>, <kbd>C</kbd>, <kbd>H</kbd> hoặc <kbd>J</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, hai bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy ra giữa màn hình để đập tay.</p>
         </div>
@@ -141,16 +141,16 @@
         <div class="card">
           <h2>🌡️ Thanh độ ấm</h2>
           <div class="readout">
-            <div class="tokens" id="tokens">0%</div>
-            <div><span class="mood" id="mood">Cold</span></div>
+            <div class="tokens" id="tokens">0 <span>/ 2000 token</span></div>
+            <div><span id="pct">0%</span> · <span class="mood" id="mood">Cold</span></div>
           </div>
           <div class="marker"><i id="marker" style="left:0%"></i></div>
           <div class="scale" id="scale"></div>
           <div class="ticks" id="ticks"></div>
 
           <ul class="how">
-            <li>Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> trong tip menu mới làm thanh đầy lên.</li>
-            <li>Mỗi món làm thanh tăng <b>một số % do streamer chọn trong tiện ích</b>, không phụ thuộc số token đã tip. Ví dụ ở đây: <b>+2%</b> mỗi lần feed, <b>+4%</b> mỗi lần cuddle, <b>+3%</b> mỗi lần high five.</li>
+            <li>Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> mới làm thanh đầy lên, theo số token đã tip: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle, <b>+40</b> mỗi lần high five trong ví dụ này.</li>
+            <li>Thanh <b>đầy khi đạt 2000 token</b>. Streamer tự chọn con số này và giá của từng món.</li>
             <li>Thanh <b>không bao giờ tự giảm</b>. Streamer làm trống thanh khi muốn, ví dụ lúc bắt đầu stream.</li>
             <li>Càng ấm, hai bé trông càng vui lúc chờ. Dưới 10% thì hai bé bị lạnh và run.</li>
           </ul>
@@ -236,7 +236,7 @@ function buildStates() {
 
 /* ---------- Onglet 2 : exemple en direct ---------- */
 let live = null;
-const PRICES = { feed: 2, cuddle: 4, highfive: 3 };   // % de jauge par animation (réglables dans l'extension)
+const PRICES = { feed: 25, cuddle: 50, highfive: 40 };
 function buildLive() {
   if (live) return;
   live = makePreview(document.getElementById("liveScreen"), send => { send({ type: "reset" }); send({ type: "set", pct: 45 }); }, 960, 540);
@@ -275,7 +275,8 @@ MOODS.forEach(m => {
 addEventListener("message", e => {
   const d = e.data;
   if (!live || e.source !== live.frame.contentWindow || !d || d.app !== APP || d.type !== "state") return;
-  document.getElementById("tokens").textContent = d.pct + "%";
+  document.getElementById("tokens").innerHTML = `${d.tokens} <span>/ ${d.max} token</span>`;
+  document.getElementById("pct").textContent = d.pct + "%";
   const m = MOODS.find(x => x.key === d.mood) || MOODS[1];
   document.getElementById("mood").textContent = m.name;
   document.getElementById("marker").style.left = d.pct + "%";

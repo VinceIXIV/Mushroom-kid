@@ -5,11 +5,11 @@ const TEXT = {
   en: {
     reconnect: 'Reconnect to OBS', tryIt: 'Try it', bubbleName: 'Name shown in the bubble', resetWarmth: 'Reset warmth',
     triggers: 'Tip menu', itemFeed: 'Tip menu item "feed"', itemCuddle: 'Tip menu item "cuddle"',
-    itemHf0: 'Item "high five", cream cap kid', itemHf1: 'Item "high five", mint cap kid', price: 'gauge +%',
+    itemHf0: 'Item "high five", cream cap kid', itemHf1: 'Item "high five", mint cap kid', price: 'price (tk)',
     triggersHelp: '⚠️ Add these items to your Stripchat tip menu, with the same names as here. Emojis around the name and capitals don\'t matter. When a viewer tips one of them, the kids play that animation. Leave a name empty to turn it off.',
-    priceHelp: 'Gauge +%: how much each of these tips warms the kids up (100% = full gauge). The amount tipped in the chat doesn\'t matter.',
+    priceHelp: 'Price: the price of this item in your tip menu. It is what each of these tips adds to the warmth gauge.',
     gauge: 'Warmth gauge', fullAt: 'The gauge is full (100%) at', tokens: 'tokens',
-    gaugeHelp: 'Each tip menu animation adds its price (set above) to the gauge.',
+    gaugeHelp: 'Each tip menu animation adds its price (set above) to the gauge. On stream, the gauge shows the percentage of this total.',
     password: 'WebSocket password', port: 'Port', save: 'Save', saved: 'Saved ✓',
     latest: 'Latest animations', none: 'None yet.', test: '(test)', warmthReset: 'warmth reset',
     status: { '': 'not connected yet', 'connected': 'connected', 'connecting…': 'connecting…', 'wrong OBS password': 'wrong OBS password',
@@ -18,11 +18,11 @@ const TEXT = {
   vi: {
     reconnect: 'Kết nối lại với OBS', tryIt: 'Thử', bubbleName: 'Tên hiện trong bong bóng', resetWarmth: 'Đặt lại độ ấm',
     triggers: 'Tip menu', itemFeed: 'Món tip menu "feed"', itemCuddle: 'Món tip menu "cuddle"',
-    itemHf0: 'Món "high five", bé mũ kem', itemHf1: 'Món "high five", bé mũ xanh bạc hà', price: 'độ ấm +%',
+    itemHf0: 'Món "high five", bé mũ kem', itemHf1: 'Món "high five", bé mũ xanh bạc hà', price: 'giá (tk)',
     triggersHelp: '⚠️ Hãy thêm các món này vào tip menu Stripchat của bạn, với đúng tên như ở đây. Có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Khi viewer tip một món, hai bé sẽ làm hoạt ảnh tương ứng. Để trống tên nếu không dùng món đó.',
-    priceHelp: 'Độ ấm +%: mỗi tip món này làm thanh độ ấm tăng bao nhiêu phần trăm (100% = đầy). Số token tip trong chat không ảnh hưởng.',
+    priceHelp: 'Giá: giá của món này trong tip menu của bạn. Đó là số token mỗi tip này cộng vào thanh độ ấm.',
     gauge: 'Thanh độ ấm', fullAt: 'Thanh đầy (100%) khi đạt', tokens: 'token',
-    gaugeHelp: 'Mỗi hoạt ảnh từ tip menu cộng giá của món đó (ở trên) vào thanh.',
+    gaugeHelp: 'Mỗi hoạt ảnh từ tip menu cộng giá của món đó (ở trên) vào thanh. Trên stream, thanh hiện phần trăm so với tổng này.',
     password: 'Mật khẩu WebSocket', port: 'Cổng', save: 'Lưu', saved: 'Đã lưu ✓',
     latest: 'Hoạt ảnh gần đây', none: 'Chưa có.', test: '(thử)', warmthReset: 'đặt lại độ ấm',
     status: { '': 'chưa kết nối', 'connected': 'đã kết nối', 'connecting…': 'đang kết nối…', 'wrong OBS password': 'sai mật khẩu OBS',
@@ -47,10 +47,10 @@ document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('clic
 
 // Mêmes réglages par défaut que background.js
 const DEFAULT_ACTIONS = [
-  { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 2 },
-  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 4 },
-  { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 3 },
-  { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 3 },
+  { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
+  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
+  { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
+  { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
 ];
 
 async function load() {
@@ -63,6 +63,7 @@ async function load() {
   }
   $('obsPassword').value = s.obsPassword || '';
   $('obsPort').value = s.obsPort || 4455;
+  $('heatMax').value = s.heatMax || 2000;
 }
 
 async function save() {
@@ -70,6 +71,7 @@ async function save() {
     actions: DEFAULT_ACTIONS.map((d) => ({ ...d, label: $(d.id + 'Label').value.trim(), amount: Number($(d.id + 'Amount').value) || 0 })),
     obsPassword: $('obsPassword').value,
     obsPort: Number($('obsPort').value) || 4455,
+    heatMax: Math.max(1, Number($('heatMax').value) || 2000),
   });
   $('saved').textContent = t('saved');
   setTimeout(() => ($('saved').textContent = ''), 1500);
@@ -90,7 +92,7 @@ function showLog(log = []) {
     const li = document.createElement('li');
     const who = document.createElement('span');
     const time = new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    who.textContent = `${time}  ${e.user} · +${e.amount}%` + (e.item ? ` · menu: “${e.item}”` : '');
+    who.textContent = `${time}  ${e.user} · ${e.amount} tk` + (e.item ? ` · menu: “${e.item}”` : '');
     const what = document.createElement('span');
     what.className = 'a';
     what.textContent = (LABELS[e.action] || e.action) + (e.simulated ? ' ' + t('test') : '') + (e.sent ? ' ✓' : ' ✗ ' + (e.error || ''));

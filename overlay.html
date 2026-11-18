@@ -176,8 +176,8 @@
 </style>
 </head>
 <body>
-<div id="help"><b>F</b> Feed the kids (+2%) · <b>C</b> Cuddle the kids (+4%) · <b>H</b> / <b>J</b> high five, 1st / 2nd kid (+3%) · OBS: <span id="obsState">…</span><br>
-Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 10%</div>
+<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · <b>H</b> / <b>J</b> high five (1st / 2nd kid) · OBS: <span id="obsState">…</span><br>
+Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
 <div id="home">
   <div id="bubble"></div>
   <div id="stage"></div>
@@ -193,7 +193,7 @@ const CONFIG = {
     { name: "Bibi",  cap: "#eadbbd", size: 1.0 },   // chapeau crème clair
     { name: "Pouic", cap: "#9fd6c6", size: 0.88 },  // chapeau vert d'eau
   ],
-  heatMaxTokens: 100,    // la jauge compte en % : chaque animation l'avance du % réglé dans l'extension
+  heatMaxTokens: 2000,   // jauge pleine après 2000 tokens de feed + cuddle cumulés
   coldBelow: 10,         // en dessous de 10 % : ils ont froid et frissonnent
   hotAbove: 80,          // au-dessus de 80 % : la jauge rougeoie
   moods: [45, 60, 70, 90],   // paliers de joie au repos : comfy dès 45 %, cosy dès 60 %, happy dès 70 %, blissful dès 90 %
@@ -630,10 +630,7 @@ function handleEvent(ev) {
   if (!ev || !ev.type) return;
   // Le 100 % de la jauge se règle dans l'extension, qui l'envoie avec chaque événement
   if (Number(ev.heatMax) > 0 && Number(ev.heatMax) !== CONFIG.heatMaxTokens) {
-    // changement d'échelle (ex. ancienne jauge en tokens -> jauge en %) : on garde le même remplissage
-    heatTokens = heatTokens * Number(ev.heatMax) / CONFIG.heatMaxTokens;
     CONFIG.heatMaxTokens = Number(ev.heatMax);
-    save();
     try { localStorage.setItem(MAX_KEY, String(CONFIG.heatMaxTokens)); } catch (e) {}
     render();
   }
@@ -713,14 +710,13 @@ if (params.has("test")) {
   document.body.classList.add("test");
   addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
-    const pct = p => p * CONFIG.heatMaxTokens / 100;
-    if (k === "f") kids.feed("Tester", pct(2));
-    if (k === "c") kids.cuddle("Tester", pct(4));
-    if (k === "h") kids.highfive(0, "Tester", pct(3));
-    if (k === "j") kids.highfive(1, "Tester", pct(3));
+    if (k === "f") kids.feed("Tester", 25);
+    if (k === "c") kids.cuddle("Tester", 50);
+    if (k === "h") kids.highfive(0, "Tester", 40);
+    if (k === "j") kids.highfive(1, "Tester", 40);
     if (k === "0") kids.reset();
     if (/^[1-9]$/.test(k)) { heatTokens = CONFIG.heatMaxTokens * Number(k) / 10; save(); render(); }   // 1-9 = 10-90 %
-    if (k === "+") { addHeat(pct(10)); }
+    if (k === "+") { addHeat(200); }
   });
 }
 
