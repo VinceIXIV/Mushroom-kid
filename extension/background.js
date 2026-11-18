@@ -5,13 +5,13 @@
 const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
-  heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
   // id : identifiant du réglage ; kid : quel enfant fait le high five (0 = 1er, chapeau crème ; 1 = 2e, chapeau vert d'eau)
   actions: [
-    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
-    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
-    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 0 },
-    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 0 },
+    // amount : de combien de % chaque tip de cet item fait avancer la jauge de chaleur
+    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 2 },
+    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 4 },
+    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 3 },
+    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 3 },
   ],
 };
 const APP = 'enfants-champignons';
@@ -79,13 +79,13 @@ async function connect() {
   return ready;
 }
 
-// Chaque événement porte aussi le réglage de la jauge : l'overlay le retient.
+// La jauge compte en % : chaque événement dit à l'overlay que 100 = jauge pleine.
 async function sendToOBS(eventData) {
   await connect();
-  const { heatMax } = await getSettings();
+  const heatMax = 100;
   ws.send(JSON.stringify({
     op: 6,
-    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax: Number(heatMax) || 2000, ...eventData } } },
+    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax, ...eventData } } },
   }));
 }
 
@@ -104,7 +104,6 @@ function decide(tip, s) {
   // Ancien format sans repère « menu » : on cherche dans tout le texte du tip.
   const where = tip.menu ? norm(tip.comment) : (tip.menu === undefined ? norm(tip.text) : '');
   for (const a of s.actions) if (a.label && where && where.includes(norm(a.label))) return a;
-  for (const a of s.actions) if (Number(a.amount) > 0 && tip.amount === Number(a.amount)) return a; // montant exact
   return null;
 }
 
@@ -117,15 +116,17 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       const action = decide(msg, s);
       if (action) {
         let sent = false, error = '';
-        try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount: msg.amount }); sent = true; }
+        // la jauge avance du % réglé dans l'extension pour cet item (pas du montant lu dans le chat)
+        const amount = Number(action.amount) || 0;
+        try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount }); sent = true; }
         catch (e) { error = e.message; }
-        await log({ user: msg.user, amount: msg.amount, item: msg.menu ? msg.comment : '', action: action.id, sent, error });
+        await log({ user: msg.user, amount, item: msg.menu ? msg.comment : '', action: action.id, sent, error });
       }
       reply({ ok: true });
     } else if (msg.type === 'simulate') {
       const a = s.actions.find((x) => x.id === msg.action);
       const ev = msg.action === 'reset' || !a ? { type: 'reset' }
-        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 30 };
+        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 0 };
       try { await sendToOBS(ev); await log({ user: ev.user || '—', amount: ev.amount || 0, action: msg.action, sent: true, simulated: true }); reply({ ok: true }); }
       catch (e) { reply({ ok: false, error: e.message }); }
     } else if (msg.type === 'reconnect') {
