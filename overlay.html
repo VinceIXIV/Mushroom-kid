@@ -18,8 +18,8 @@
     ?gauge=0    cache la jauge
     ?names=0    cache les noms des enfants
     ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
-    ?home=0,0.86  position du bloc du champignon : x,y de 0 à 1 (0 = gauche / haut, 1 = droite / bas).
-                Par défaut 0,0.86 : en bas à gauche, juste au-dessus de l'horloge de son stream.
+    ?home=0,0.78  position du bloc du champignon : x,y de 0 à 1 (0 = gauche / haut, 1 = droite / bas).
+                Par défaut 0,0.78 : en bas à gauche, au-dessus de l'horloge de son stream.
     ?me=50,40   où est la streameuse à l'écran, en % (il se tourne vers elle pour le high five)
     ?hf=32,46   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
     ?front=27,98  où il pose les pieds pour le high five aux viewers (devant, en grand)
@@ -44,7 +44,7 @@
   body.test { background: #5a6b7d; }
 
   /* Le bloc des enfants (480 x 360) dans l'écran : --hx, --hy de 0 à 1 */
-  #home { position: absolute; width: 300px; height: 330px; --hx: 0; --hy: .86;   /* au-dessus de l'horloge en bas à gauche du stream */
+  #home { position: absolute; width: 300px; height: 330px; --hx: 0; --hy: .78;   /* au-dessus de l'horloge en bas à gauche du stream */
           left: calc(var(--hx) * (100% - 300px)); top: calc(var(--hy) * (100% - 330px)); }
   #stage { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 28px; padding-bottom: 12px; }
 
