@@ -270,44 +270,66 @@
       <!-- 4 -->
       <div class="card">
         <h2><span class="num">4</span> <span data-l="vi">Nối tiện ích với OBS</span><span data-l="en">Connect the extension to OBS</span></h2>
+        <p class="muted"><span data-l="vi">Tiện ích đọc chat Stripchat của bạn. Khi có người tip một món của hai bé, nó báo cho OBS qua WebSocket. Ở bước này, bạn cho tiện ích biết mật khẩu để nó được phép nói chuyện với OBS.</span><span data-l="en">The extension reads your Stripchat chat. When someone tips one of the kids’ items, it tells OBS through the WebSocket. In this step, you give the extension the password so it is allowed to talk to OBS.</span></p>
         <ol class="sub">
-          <li><span data-l="vi">Bấm biểu tượng <b>Mushroom Kids</b> trên Chrome. Bấm <b>lá cờ Việt Nam</b> ở góc trên bên phải để chuyển sang tiếng Việt.</span><span data-l="en">Click the <b>Mushroom Kids</b> icon in Chrome. The flags in the top right corner switch the extension between English and Vietnamese.</span></li>
-          <li><span data-l="vi">Dán mật khẩu vào ô <b>Mật khẩu WebSocket</b> rồi bấm <b>Lưu</b>.</span><span data-l="en">Paste the password into <b>WebSocket password</b> and click <b>Save</b>.</span>
-            <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
-          <li><span data-l="vi">Dòng trên cùng chuyển sang màu xanh: <b>OBS: đã kết nối</b>.</span><span data-l="en">The top line turns green: <b>OBS: connected</b>.</span>
-            <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
+          <li><span data-l="vi">Bấm biểu tượng <b>M</b> (Mushroom Kids) cạnh thanh địa chỉ của Chrome. Bấm <b>lá cờ Việt Nam</b> ở góc trên bên phải để chuyển tiện ích sang tiếng Việt.</span><span data-l="en">Click the <b>M</b> icon (Mushroom Kids) next to Chrome’s address bar. The flags in the top right corner switch the extension between English and Vietnamese.</span>
+            <img class="shot" loading="lazy" src="captures/extension-1.png" alt="">
+            <p class="muted"><span data-l="vi">Trong tiện ích có:</span><span data-l="en">In the extension you find:</span></p>
+            <ul>
+              <li><span data-l="vi"><b>Dòng trên cùng</b>: tiện ích đã kết nối với OBS chưa. Lúc đầu nó ghi <b>chưa kết nối</b>, như vậy là bình thường.</span><span data-l="en"><b>The top line</b>: whether the extension is connected to OBS. At first it says <b>not connected yet</b>, which is normal.</span></li>
+              <li><span data-l="vi"><b>Thử</b>: các nút để làm hai bé chạy hoạt ảnh mà không cần tip thật (dùng ở bước 7).</span><span data-l="en"><b>Try it</b>: buttons that play the animations without a real tip (used in step 7).</span></li>
+              <li><span data-l="vi"><b>Tip menu</b>: tên và giá của các món (dùng ở bước 6). Trong ảnh chỉ là ví dụ.</span><span data-l="en"><b>Tip menu</b>: the names and prices of the items (used in step 6). The picture is only an example.</span></li>
+            </ul></li>
+          <li><span data-l="vi">Kéo xuống phần <b>OBS</b>. Dán mật khẩu bạn đã giữ ở bước 3 vào ô <b>Mật khẩu WebSocket</b> (bấm vào ô rồi <b>Ctrl+V</b>). Không đổi ô <b>Cổng</b> (4455). Bấm <b>Lưu</b>.</span><span data-l="en">Scroll down to the <b>OBS</b> section. Paste the password you kept in step 3 into <b>WebSocket password</b> (click the box, then <b>Ctrl+V</b>). Leave <b>Port</b> as it is (4455). Click <b>Save</b>.</span>
+            <img class="shot" loading="lazy" src="captures/extension-2.png" alt=""></li>
+          <li><span data-l="vi">Dòng trên cùng chuyển sang màu xanh: <b>OBS: đã kết nối</b>. Nếu không, xem phần <b>Gặp trục trặc?</b> ở cuối trang.</span><span data-l="en">The top line turns green: <b>OBS: connected</b>. If not, see <b>Something wrong?</b> at the bottom of this page.</span>
+            <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div>
+            <p class="muted"><span data-l="vi">OBS phải đang mở thì tiện ích mới kết nối được.</span><span data-l="en">OBS must be open for the extension to connect.</span></p></li>
         </ol>
       </div>
 
       <!-- 5 -->
       <div class="card">
         <h2><span class="num">5</span> <span data-l="vi">Thêm hai bé vào OBS</span><span data-l="en">Add the kids to OBS</span></h2>
-        <p><span data-l="vi">Trước tiên, tạo địa chỉ cho OBS ở đây:</span><span data-l="en">First, make the address for OBS here:</span></p>
+        <p class="muted"><span data-l="vi">Hai bé là một <b>nguồn Browser</b> (Trình duyệt) trong OBS: OBS mở trang của hai bé như một <b>lớp trong suốt</b> đặt lên trên hình stream của bạn. Trang này cũng cần mật khẩu WebSocket để nghe tiện ích.</span><span data-l="en">The kids are a <b>Browser source</b> in OBS: OBS opens the kids’ page as a <b>transparent layer</b> on top of your stream picture. This page also needs the WebSocket password to listen to the extension.</span></p>
+
+        <p><b><span data-l="vi">5a. Tạo địa chỉ cho OBS</span><span data-l="en">5a. Make the address for OBS</span></b></p>
         <div class="urlbox">
-          <label for="pw"><span data-l="vi">Dán mật khẩu WebSocket (ở bước 3)</span><span data-l="en">Paste the WebSocket password (from step 3)</span></label>
+          <label for="pw"><span data-l="vi">Dán mật khẩu WebSocket bạn đã giữ ở bước 3</span><span data-l="en">Paste the WebSocket password you kept in step 3</span></label>
           <input type="password" id="pw" autocomplete="off">
-          <label for="corner"><span data-l="vi">Hai bé ngồi ở góc nào?</span><span data-l="en">Which corner should the kids sit in?</span></label>
+          <label for="corner"><span data-l="vi">Hai bé ngồi ở góc nào của màn hình?</span><span data-l="en">Which corner of the screen should the kids sit in?</span></label>
           <select id="corner">
             <option value="0,1"></option>
             <option value="1,1"></option>
           </select>
-          <label for="url"><span data-l="vi">Địa chỉ cho OBS</span><span data-l="en">Address for OBS</span></label>
+          <label for="url"><span data-l="vi">Địa chỉ cho OBS: bấm <b>Sao chép</b></span><span data-l="en">Address for OBS: click <b>Copy</b></span></label>
           <div class="urlrow"><input type="text" id="url" readonly><button class="small" id="copyUrl"></button></div>
           <p class="muted"><span data-l="vi">Mật khẩu chỉ nằm trên máy của bạn: trang này không gửi nó đi đâu cả.</span><span data-l="en">The password stays on your computer: this page doesn’t send it anywhere.</span></p>
         </div>
+
+        <p><b><span data-l="vi">5b. Thêm nguồn trong OBS</span><span data-l="en">5b. Add the source in OBS</span></b></p>
         <ol class="sub">
-          <li><span data-l="vi">Trong OBS, ở ô <b>Sources</b> (Nguồn), bấm <b>+</b> → <b>Browser</b> (Trình duyệt). Đặt tên <b>Mushroom Kids</b> rồi bấm OK.</span><span data-l="en">In OBS, in the <b>Sources</b> box, click <b>+</b> → <b>Browser</b>. Name it <b>Mushroom Kids</b> and click OK.</span>
+          <li><span data-l="vi">Trong OBS, ở ô <b>Scenes</b> (Cảnh, bên trái phía dưới), bấm vào <b>cảnh bạn dùng để stream</b>.</span><span data-l="en">In OBS, in the <b>Scenes</b> box (bottom left), click the <b>scene you use to stream</b>.</span></li>
+          <li><span data-l="vi">Ở ô <b>Sources</b> (Nguồn), bấm nút <b>+</b> ở dưới cùng → chọn <b>Browser</b> (Trình duyệt). Chọn <b>Create new</b> (Tạo mới), đặt tên <b>Mushroom Kids</b> rồi bấm <b>OK</b>.</span><span data-l="en">In the <b>Sources</b> box, click the <b>+</b> button at the bottom → choose <b>Browser</b>. Choose <b>Create new</b>, name it <b>Mushroom Kids</b> and click <b>OK</b>.</span>
             <img class="shot" loading="lazy" src="captures/05-obs-sources-plus.png" alt=""></li>
-          <li><span data-l="vi">Trong cửa sổ hiện ra:</span><span data-l="en">In the window that opens:</span>
+          <li><span data-l="vi">Cửa sổ <b>Properties</b> (Thuộc tính) hiện ra. Chỉ cần đổi 4 thứ:</span><span data-l="en">The <b>Properties</b> window opens. Change only 4 things:</span>
             <ul>
-              <li><span data-l="vi"><b>Bỏ tick</b> ô <b>Local file</b>.</span><span data-l="en"><b>Untick</b> <b>Local file</b>.</span></li>
-              <li><span data-l="vi">Dán địa chỉ vừa sao chép vào ô <b>URL</b>.</span><span data-l="en">Paste the address you just copied into <b>URL</b>.</span></li>
-              <li><span data-l="vi"><b>Width</b> = <code>1920</code>, <b>Height</b> = <code>1080</code> (hoặc đúng kích thước khung hình OBS của bạn).</span><span data-l="en"><b>Width</b> = <code>1920</code>, <b>Height</b> = <code>1080</code> (or the size of your OBS canvas).</span></li>
-              <li><span data-l="vi">Bấm <b>OK</b>.</span><span data-l="en">Click <b>OK</b>.</span></li>
+              <li><span data-l="vi"><b>Bỏ tick</b> ô <b>Local file</b> (Tệp cục bộ).</span><span data-l="en"><b>Untick</b> <b>Local file</b>.</span></li>
+              <li><span data-l="vi">Ô <b>URL</b>: xoá chữ có sẵn, rồi dán địa chỉ ở 5a (<b>Ctrl+V</b>).</span><span data-l="en"><b>URL</b>: delete what is already there, then paste the address from 5a (<b>Ctrl+V</b>).</span></li>
+              <li><span data-l="vi"><b>Width</b> (Rộng) = <code>1920</code> và <b>Height</b> (Cao) = <code>1080</code>.</span><span data-l="en"><b>Width</b> = <code>1920</code> and <b>Height</b> = <code>1080</code>.</span>
+                <p class="muted"><span data-l="vi">Đây là kích thước khung hình stream của bạn. Nếu không chắc: OBS → <b>Settings</b> (Cài đặt) → <b>Video</b> → <b>Base (Canvas) Resolution</b>, và điền đúng hai số đó.</span><span data-l="en">This is the size of your stream picture. If you’re not sure: OBS → <b>Settings</b> → <b>Video</b> → <b>Base (Canvas) Resolution</b>, and use those two numbers.</span></p></li>
+              <li><span data-l="vi">Để nguyên các ô khác, bấm <b>OK</b>.</span><span data-l="en">Leave everything else as it is and click <b>OK</b>.</span></li>
             </ul>
             <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
-          <li><span data-l="vi">Hai bé xuất hiện ở góc dưới màn hình, nền trong suốt. <b>Không cần kéo giãn</b> nguồn này: cứ để nó phủ cả màn hình, vì hai bé sẽ nhảy ra giữa màn hình khi có high five.</span><span data-l="en">The kids appear in the bottom corner, with a transparent background. <b>Don’t resize</b> this source: leave it covering the whole screen, because the kids hop to the middle of the screen for a high five.</span>
+        </ol>
+
+        <p><b><span data-l="vi">5c. Kiểm tra</span><span data-l="en">5c. Check</span></b></p>
+        <ol class="sub">
+          <li><span data-l="vi">Hai bé xuất hiện ở góc dưới màn hình, với thanh độ ấm. Nền trong suốt: bạn vẫn thấy camera phía sau.</span><span data-l="en">The kids appear in the bottom corner of the screen, with the warmth gauge. The background is transparent: you still see your camera behind them.</span>
             <div class="shot missing"><span data-l="vi">Ảnh minh hoạ sẽ được thêm sau</span><span data-l="en">Screenshot coming soon</span></div></li>
+          <li><span data-l="vi"><b>Không thấy hai bé?</b> Trong ô <b>Sources</b>, nguồn <b>Mushroom Kids</b> phải nằm <b>trên</b> nguồn camera của bạn. Kéo nó lên đầu danh sách.</span><span data-l="en"><b>Can’t see the kids?</b> In the <b>Sources</b> box, the <b>Mushroom Kids</b> source must be <b>above</b> your camera source. Drag it to the top of the list.</span></li>
+          <li><span data-l="vi"><b>Đừng kéo giãn hay thu nhỏ</b> khung đỏ của nguồn này: nó phải phủ cả màn hình, vì hai bé sẽ nhảy ra giữa màn hình khi có high five. Nếu lỡ kéo: chuột phải vào nguồn → <b>Transform</b> (Biến đổi) → <b>Fit to screen</b> (Vừa màn hình).</span><span data-l="en"><b>Don’t stretch or shrink</b> the red frame of this source: it must cover the whole screen, because the kids hop to the middle of the screen for a high five. If you moved it by mistake: right-click the source → <b>Transform</b> → <b>Fit to screen</b>.</span></li>
+          <li><span data-l="vi">Muốn hai bé ở góc khác? Chọn góc khác ở 5a, sao chép địa chỉ mới, rồi chuột phải vào nguồn → <b>Properties</b> và dán vào ô URL.</span><span data-l="en">Want the kids in another corner? Pick another corner in 5a, copy the new address, then right-click the source → <b>Properties</b> and paste it into URL.</span></li>
         </ol>
       </div>
 
