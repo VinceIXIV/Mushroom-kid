@@ -5,19 +5,23 @@
 const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
-  room: '',          // vide = toutes les rooms ; sinon nom de la room (dans l'URL) à surveiller
-  testMode: false,   // true = n'importe quel tip déclenche une animation (alternativement feed / cuddle)
   heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
+  // id : identifiant du réglage ; kid : quel enfant fait le high five (0 = 1er, chapeau crème ; 1 = 2e, chapeau vert d'eau)
   actions: [
-    { type: 'feed',   label: 'Feed the kids',   amount: 25 },
-    { type: 'cuddle', label: 'Cuddle the kids', amount: 50 },
+    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
+    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
+    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 0 },
+    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 0 },
   ],
 };
 const APP = 'enfants-champignons';
 
 async function getSettings() {
   const s = await chrome.storage.local.get(null);
-  return { ...DEFAULTS, ...s, actions: s.actions || DEFAULTS.actions };
+  // réglages enregistrés par une version précédente (sans id ni high five) : on complète
+  const saved = s.actions || [];
+  const actions = DEFAULTS.actions.map((d) => ({ ...d, ...(saved.find((x) => (x.id || x.type) === d.id) || {}), id: d.id, type: d.type, kid: d.kid }));
+  return { ...DEFAULTS, ...s, actions };
 }
 
 /* ---------------- Journal (affiché dans la popup) ---------------- */
@@ -94,14 +98,13 @@ setInterval(() => {
 
 /* ---------------- Choix de l'action ---------------- */
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
-let testToggle = false;
 
 function decide(tip, s) {
-  if (s.room && !norm(tip.url).includes(norm(s.room))) return null;
-  const text = norm(tip.text);
-  for (const a of s.actions) if (a.label && text.includes(norm(a.label))) return a.type;   // item du tip menu
-  for (const a of s.actions) if (Number(a.amount) > 0 && tip.amount === Number(a.amount)) return a.type; // montant exact
-  if (s.testMode) { testToggle = !testToggle; return testToggle ? 'feed' : 'cuddle'; }
+  // Item du tip menu : on ne cherche le nom que dans les vrais tips du menu (pas dans un message libre).
+  // Ancien format sans repère « menu » : on cherche dans tout le texte du tip.
+  const where = tip.menu ? norm(tip.comment) : (tip.menu === undefined ? norm(tip.text) : '');
+  for (const a of s.actions) if (a.label && where && where.includes(norm(a.label))) return a;
+  for (const a of s.actions) if (Number(a.amount) > 0 && tip.amount === Number(a.amount)) return a; // montant exact
   return null;
 }
 
@@ -110,17 +113,19 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   (async () => {
     const s = await getSettings();
     if (msg.type === 'tip') {
+      // Seuls les tips qui déclenchent une animation sont gardés dans la liste de la popup
       const action = decide(msg, s);
-      let sent = false, error = '';
       if (action) {
-        try { await sendToOBS({ type: action, user: msg.user, amount: msg.amount }); sent = true; }
+        let sent = false, error = '';
+        try { await sendToOBS({ type: action.type, kid: action.kid, user: msg.user, amount: msg.amount }); sent = true; }
         catch (e) { error = e.message; }
+        await log({ user: msg.user, amount: msg.amount, item: msg.menu ? msg.comment : '', action: action.id, sent, error });
       }
-      await log({ user: msg.user, amount: msg.amount, action, sent, error });
       reply({ ok: true });
     } else if (msg.type === 'simulate') {
-      const a = s.actions.find((x) => x.type === msg.action);
-      const ev = msg.action === 'reset' ? { type: 'reset' } : { type: msg.action, user: msg.user || 'Tester', amount: a ? Number(a.amount) : 0 };
+      const a = s.actions.find((x) => x.id === msg.action);
+      const ev = msg.action === 'reset' || !a ? { type: 'reset' }
+        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 30 };
       try { await sendToOBS(ev); await log({ user: ev.user || '—', amount: ev.amount || 0, action: msg.action, sent: true, simulated: true }); reply({ ok: true }); }
       catch (e) { reply({ ok: false, error: e.message }); }
     } else if (msg.type === 'reconnect') {

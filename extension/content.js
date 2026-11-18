@@ -1,9 +1,14 @@
 // Lit le chat Stripchat et transmet chaque nouveau tip au service worker (background.js),
 // qui décide s'il s'agit de « feed » ou « cuddle » et prévient OBS.
 (() => {
-  // Message de tip public dans le chat (même repère que l'extension chat-translate).
-  const TIP_SEL = '.m-bg-public-tip';
-  const USER_SEL = '.username, .message-username, [class*="username"]';
+  // Ligne de tip dans le chat. Format actuel (2026) : <div data-message-id class="TipMessage#xx … m-bg-tip-v2 message">.
+  // Les suffixes « #xx » des classes changent à chaque mise à jour de Stripchat : on ne s'y fie pas.
+  // .m-bg-public-tip = ancien format, gardé au cas où.
+  // (même repère que l'extension stripchat-gemini, qui fonctionne sur le Stripchat actuel)
+  const TIP_SEL = '.message[class*="TipMessage"], .m-bg-tip-v2, .m-bg-public-tip';
+  const USER_SEL = '.user-levels-username-text, .message-username, .username, [class*="username"]';
+  const AMOUNT_SEL = '[class*="TipMessage__amount"]';    // « 25 jt », « 25 tk »… selon la langue
+  const COMMENT_SEL = '[class*="TipMessage__commentBody"]'; // message du tipeur (ou item du tip menu)
 
   const seen = new WeakSet();
   const recent = new Map(); // signature -> heure, pour ignorer un même message ré-affiché
@@ -15,9 +20,17 @@
     const text = (row.innerText || row.textContent || '').replace(/\s+/g, ' ').trim();
     const userEl = row.querySelector(USER_SEL);
     const user = (userEl ? userEl.textContent : '').trim() || 'someone';
-    const m = text.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jetons?)\b/i) || text.match(/\b(\d{1,6})\b/);
+    // Montant : d'abord l'élément dédié, sinon dans le texte (tk, tks, tokens, jt, jetons…)
+    const amountEl = row.querySelector(AMOUNT_SEL);
+    const m = (amountEl && amountEl.textContent.match(/(\d[\d\s., ]*)/))
+      || text.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jt|jts|jetons?)\b/i) || text.match(/\b(\d{1,6})\b/);
     const amount = m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0;
-    return { user, amount, text: text.slice(0, 300) };
+    const commentEl = row.querySelector(COMMENT_SEL);
+    const comment = commentEl ? (commentEl.innerText || commentEl.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    // Tip du tip menu : le commentaire porte « TipMessage__commentTipMenu » et un bouton « Menu des pourboires » ;
+    // le commentBody contient alors le nom de l'item (ex. « 💏 A Flying Kiss 😙💕 »).
+    const menu = !!row.querySelector('[class*="TipMessage__commentTipMenu"], [class*="TipMessage__tipMenuLink"]');
+    return { user, amount, menu, comment: comment.slice(0, 200), text: text.slice(0, 300) };
   }
 
   function send(rows) {
@@ -33,27 +46,16 @@
       if (recent.has(sig)) continue;
       recent.set(sig, now);
       try {
-        chrome.runtime.sendMessage({ type: 'tip', ...tip, url: location.href }).catch(() => {});
+        chrome.runtime.sendMessage({ type: 'tip', ...tip }).catch(() => {});
       } catch (e) { /* extension rechargée : il faut actualiser la page */ }
     }
   }
-
-  // Outil de diagnostic : garde le HTML des derniers messages ajoutés au chat,
-  // pour que la popup puisse les copier (format des tips du tip menu à identifier).
-  const lastMessages = [];
-  chrome.runtime.onMessage.addListener((msg, sender, reply) => {
-    if (msg.type === 'dump') reply({ url: location.href, messages: lastMessages.slice() });
-  });
 
   new MutationObserver((muts) => {
     const rows = [];
     for (const mu of muts) {
       for (const n of mu.addedNodes) {
         if (n.nodeType !== 1) continue;
-        if (n.closest && n.closest('.messages, [class*="messages"], [class*="Chat"], [class*="chat"]') && (n.textContent || '').trim()) {
-          lastMessages.push(n.outerHTML.slice(0, 4000));
-          if (lastMessages.length > 15) lastMessages.shift();
-        }
         if (n.matches(TIP_SEL)) rows.push(n);
         else n.querySelectorAll(TIP_SEL).forEach((r) => rows.push(r));
       }

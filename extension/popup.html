@@ -21,41 +21,54 @@
   li { padding: 3px 0; border-bottom: 1px solid #eadfd2; display: flex; justify-content: space-between; gap: 8px; }
   li .a { white-space: nowrap; }
   #saved { color: #3b8a4a; margin-left: 6px; }
+  .note { margin: 6px 0; padding: 7px 9px; border-radius: 6px; background: #fff3d6; border: 1px solid #ecd39a; color: #5a4320; }
+  header { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; }
+  header h1 { margin: 0; }
+  .langs { display: flex; gap: 6px; }
+  .langs button { padding: 0; border: 0; background: none; line-height: 0; border-radius: 3px; opacity: .35; transition: opacity .15s; }
+  .langs button:hover { opacity: .7; filter: none; }
+  .langs button.on { opacity: 1; box-shadow: 0 0 0 2px #8c6d55; }
+  .langs svg { width: 24px; height: 16px; border-radius: 2px; display: block; }
 </style>
 </head>
 <body>
-  <h1>🍄 Mushroom Kids</h1>
-  <div id="status" class="status"><span id="statusText">…</span><button id="reconnect" title="Reconnect to OBS">↻</button></div>
+  <header>
+    <h1>🍄 Mushroom Kids</h1>
+    <div class="langs">
+      <button data-lang="en" title="English"><svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="uk"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#uk)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg></button>
+      <button data-lang="vi" title="Tiếng Việt"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#DA251D"/><polygon fill="#FF0" points="15,4 16.76,9.43 22.47,9.43 17.85,12.79 19.61,18.21 15,14.86 10.39,18.21 12.15,12.79 7.53,9.43 13.24,9.43"/></svg></button>
+    </div>
+  </header>
+  <div id="status" class="status"><span id="statusText">…</span><button id="reconnect" data-i18n-title="reconnect">↻</button></div>
 
-  <h2>Try it</h2>
-  <label>Name shown in the bubble <input type="text" id="testUser" value="Tester"></label>
+  <h2 data-i18n="tryIt"></h2>
+  <label><span data-i18n="bubbleName"></span> <input type="text" id="testUser" value="Tester"></label>
   <div class="btns">
     <button data-sim="feed">🍪 Feed</button>
     <button data-sim="cuddle">🤗 Cuddle</button>
-    <button data-sim="reset">Reset warmth</button>
+    <button data-sim="hf0" title="High five, cream cap kid">✋ 1</button>
+    <button data-sim="hf1" title="High five, mint cap kid">✋ 2</button>
+    <button data-sim="reset" data-i18n="resetWarmth"></button>
   </div>
 
-  <h2>Triggers</h2>
-  <div class="row"><label>Tip menu item "feed" <input type="text" id="feedLabel"></label><label>price (tk) <input type="number" id="feedAmount" min="0"></label></div>
-  <div class="row"><label>Tip menu item "cuddle" <input type="text" id="cuddleLabel"></label><label>price (tk) <input type="number" id="cuddleAmount" min="0"></label></div>
-  <small>A tip triggers the animation if its message contains the item name, or if its amount is exactly the price set here.</small>
-  <label><input type="checkbox" id="testMode"> Test mode: <b>any tip</b> triggers an animation</label>
-  <label>Room to watch <small>(empty = any room)</small> <input type="text" id="room" placeholder="room name"></label>
+  <h2 data-i18n="triggers"></h2>
+  <div class="row"><label><span data-i18n="itemFeed"></span> <input type="text" id="feedLabel"></label><label><span data-i18n="price"></span> <input type="number" id="feedAmount" min="0"></label></div>
+  <div class="row"><label><span data-i18n="itemCuddle"></span> <input type="text" id="cuddleLabel"></label><label><span data-i18n="price"></span> <input type="number" id="cuddleAmount" min="0"></label></div>
+  <div class="row"><label><span data-i18n="itemHf0"></span> <input type="text" id="hf0Label"></label><label><span data-i18n="price"></span> <input type="number" id="hf0Amount" min="0"></label></div>
+  <div class="row"><label><span data-i18n="itemHf1"></span> <input type="text" id="hf1Label"></label><label><span data-i18n="price"></span> <input type="number" id="hf1Amount" min="0"></label></div>
+  <p class="note" data-i18n="triggersHelp"></p>
+  <small data-i18n="priceHelp"></small>
 
-  <h2>Warmth gauge</h2>
-  <div class="row"><label>The gauge is full (100%) at</label><label>tokens <input type="number" id="heatMax" min="1"></label></div>
-  <small>Each feed or cuddle tip adds its tokens to the gauge.</small>
+  <h2 data-i18n="gauge"></h2>
+  <div class="row"><label data-i18n="fullAt"></label><label><span data-i18n="tokens"></span> <input type="number" id="heatMax" min="1"></label></div>
+  <small data-i18n="gaugeHelp"></small>
 
   <h2>OBS</h2>
-  <div class="row"><label>WebSocket password <input type="password" id="obsPassword"></label><label>Port <input type="number" id="obsPort"></label></div>
-  <div class="btns" style="margin-top:8px"><button class="primary" id="save">Save</button><span id="saved"></span></div>
+  <div class="row"><label><span data-i18n="password"></span> <input type="password" id="obsPassword"></label><label><span data-i18n="port"></span> <input type="number" id="obsPort"></label></div>
+  <div class="btns" style="margin-top:8px"><button class="primary" id="save" data-i18n="save"></button><span id="saved"></span></div>
 
-  <h2>Diagnostics</h2>
-  <div class="btns"><button id="dump">📋 Copy the HTML of the latest chat messages</button></div>
-  <small id="dumpInfo">Use it in the Stripchat tab, right after a tip menu tip.</small>
-
-  <h2>Latest tips seen</h2>
-  <ul id="log"><li><small>None yet.</small></li></ul>
+  <h2 data-i18n="latest"></h2>
+  <ul id="log"></ul>
 
   <script src="popup.js"></script>
 </body>

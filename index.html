@@ -44,6 +44,8 @@
 
   /* Onglet 1 : tous les états */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  @media (min-width: 720px) { .grid figure.wide { grid-column: span 2; } }
+  .hf { background: #f6c6d3; }
   figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   figcaption { padding: 10px 14px 12px; line-height: 1.45; }
   figcaption .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -130,8 +132,10 @@
           <div class="row">
             <button class="big feed" data-type="feed">🍪 Feed the kids <small>25 tk · <kbd>F</kbd></small></button>
             <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>50 tk · <kbd>C</kbd></small></button>
+            <button class="big hf" data-type="highfive" data-kid="0">✋ Bibi high five <small>40 tk · <kbd>H</kbd></small></button>
+            <button class="big hf" data-type="highfive" data-kid="1">✋ Pouic high five <small>40 tk · <kbd>J</kbd></small></button>
           </div>
-          <p class="hint">Bấm phím <kbd>F</kbd> hoặc <kbd>C</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, hai bé sẽ làm lần lượt từng cái.</p>
+          <p class="hint">Bấm phím <kbd>F</kbd>, <kbd>C</kbd>, <kbd>H</kbd> hoặc <kbd>J</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, hai bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy ra giữa màn hình để đập tay.</p>
         </div>
 
         <div class="card">
@@ -145,7 +149,7 @@
           <div class="ticks" id="ticks"></div>
 
           <ul class="how">
-            <li>Chỉ tip <b>Feed</b> và <b>Cuddle</b> mới làm thanh đầy lên, theo số token đã tip: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle trong ví dụ này.</li>
+            <li>Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> mới làm thanh đầy lên, theo số token đã tip: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle, <b>+40</b> mỗi lần high five trong ví dụ này.</li>
             <li>Thanh <b>đầy khi đạt 2000 token</b>. Streamer tự chọn con số này và giá của từng món.</li>
             <li>Thanh <b>không bao giờ tự giảm</b>. Streamer làm trống thanh khi muốn, ví dụ lúc bắt đầu stream.</li>
             <li>Càng ấm, hai bé trông càng vui lúc chờ. Dưới 10% thì hai bé bị lạnh và run.</li>
@@ -177,22 +181,28 @@ const MOODS = [
 const TIPS = [
   { type: "feed",   name: "🍪 Feed the kids",   user: "LuckyTipper", every: 9000, text: "Đồ ăn rơi xuống, hai bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip." },
   { type: "cuddle", name: "🤗 Cuddle the kids", user: "SweetViewer", every: 8000, text: "Hai bé nghiêng vào ôm nhau và tim bay lên. Bong bóng hiện tên người tip." },
+  { type: "highfive", name: "✋ Bibi high five · Pouic high five", user: "HappyFan", every: 9000, wide: true,
+    text: "Mỗi bé có một món riêng trong tip menu. Bé được tip nhảy lò cò ra giữa màn hình, một bàn tay xuất hiện và hai bên đập tay, rồi bé nhảy về chỗ cũ. Hai bé lần lượt làm ở đây." },
 ];
 
 /* Un aperçu = le vrai overlay dans un iframe, mis à l'échelle */
 const previews = [];
-function makePreview(box, onLoad) {
+// w x h : taille de « l'écran » simulé (480 x 360 = le bloc des enfants seul ; 960 x 540 = un écran 16:9)
+function makePreview(box, onLoad, w = 480, h = 360) {
   const frame = document.createElement("iframe");
   frame.title = "Mushroom Kids overlay";
   frame.src = OVERLAY;
+  frame.style.width = w + "px";
+  frame.style.height = h + "px";
+  box.style.aspectRatio = `${w} / ${h}`;
   box.appendChild(frame);
-  previews.push({ box, frame });
+  previews.push({ box, frame, w });
   const send = (msg) => frame.contentWindow.postMessage({ app: APP, ...msg }, "*");
   frame.addEventListener("load", () => onLoad && onLoad(send));
   fit();
   return { frame, send };
 }
-function fit() { previews.forEach(({ box, frame }) => frame.style.transform = `scale(${box.clientWidth / 480})`); }
+function fit() { previews.forEach(({ box, frame, w }) => frame.style.transform = `scale(${box.clientWidth / w})`); }
 new ResizeObserver(fit).observe(document.body);
 
 /* ---------- Onglet 1 : tous les états (chargé à la première ouverture) ---------- */
@@ -200,20 +210,22 @@ let statesBuilt = false;
 function buildStates() {
   if (statesBuilt) return;
   statesBuilt = true;
-  const card = (grid, title, range, text) => {
+  const card = (grid, title, range, text, wide) => {
     const fig = document.createElement("figure");
+    if (wide) fig.className = "wide";
     fig.innerHTML = `<div class="screen"></div><figcaption><div class="top"><b>${title}</b><span class="range">${range}</span></div><p>${text}</p></figcaption>`;
     grid.appendChild(fig);
     return fig.querySelector(".screen");
   };
   TIPS.forEach(t => {
-    const box = card(document.getElementById("gridTips"), t.name, `lặp lại mỗi ${t.every / 1000} giây`, t.text);
+    const box = card(document.getElementById("gridTips"), t.name, `lặp lại mỗi ${t.every / 1000} giây`, t.text, t.wide);
+    let turn = 0;   // high five : les deux enfants à tour de rôle
     makePreview(box, send => {
       send({ type: "set", pct: 40 });
-      const play = () => send({ type: t.type, user: t.user, amount: 0 });
+      const play = () => send({ type: t.type, user: t.user, amount: 0, kid: turn++ % 2 });
       setTimeout(play, 800);
       setInterval(play, t.every);
-    });
+    }, t.wide ? 960 : 480, t.wide ? 540 : 360);
   });
   MOODS.forEach(m => {
     const box = card(document.getElementById("gridMoods"), m.name, m.from === 0 ? `dưới ${m.to}%` : `${m.from}–${m.to}%`, m.text);
@@ -223,22 +235,24 @@ function buildStates() {
 
 /* ---------- Onglet 2 : exemple en direct ---------- */
 let live = null;
-const PRICES = { feed: 25, cuddle: 50 };
+const PRICES = { feed: 25, cuddle: 50, highfive: 40 };
 function buildLive() {
   if (live) return;
-  live = makePreview(document.getElementById("liveScreen"), send => { send({ type: "reset" }); send({ type: "set", pct: 45 }); });
+  live = makePreview(document.getElementById("liveScreen"), send => { send({ type: "reset" }); send({ type: "set", pct: 45 }); }, 960, 540);
 }
-function tip(type) {
+function tip(type, kid) {
   if (!live) return;
-  live.send({ type, user: document.getElementById("user").value.trim() || "Someone", amount: PRICES[type] });
+  live.send({ type, kid: Number(kid) || 0, user: document.getElementById("user").value.trim() || "Someone", amount: PRICES[type] });
 }
-document.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => tip(b.dataset.type)));
+document.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => tip(b.dataset.type, b.dataset.kid)));
 addEventListener("keydown", e => {
   if (e.target.matches("input[type=text]") || e.ctrlKey || e.metaKey || e.altKey) return;
   if (document.getElementById("live").hidden) return;
   const k = e.key.toLowerCase();
   if (k === "f") tip("feed");
   if (k === "c") tip("cuddle");
+  if (k === "h") tip("highfive", 0);
+  if (k === "j") tip("highfive", 1);
 });
 const slider = document.getElementById("slider");
 slider.addEventListener("input", () => live && live.send({ type: "set", pct: Number(slider.value) }));

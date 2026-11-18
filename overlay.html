@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <title>Mushroom Kids</title>
 <!--
-  Overlay OBS « les enfants » : source Navigateur 480 x 360, fond transparent.
-  La streameuse place et redimensionne la source où elle veut dans OBS.
+  Overlay OBS « les enfants » : source Navigateur 1920 x 1080 (plein écran), fond transparent.
+  Les enfants et la jauge sont dans un bloc de 480 x 360 placé dans un coin (?home=).
+  Pour le high five, l'enfant sort du bloc et va en sautillant jusqu'à un point de l'écran (?hf=).
+  (En 480 x 360, tout marche aussi, le trajet du high five est juste plus court.)
 
   Les animations sont déclenchées par l'extension « Les enfants champignons » via le serveur WebSocket d'OBS.
   Mot de passe WebSocket : à mettre dans CONFIG.obsPassword ci-dessous, ou dans l'URL : overlay.html?pw=xxxx
@@ -16,13 +18,16 @@
     ?gauge=0    cache la jauge
     ?names=0    cache les noms des enfants
     ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
+    ?home=0,1   position du bloc des enfants : x,y de 0 à 1 (0,1 = en bas à gauche ; 1,1 = en bas à droite)
+    ?hf=50,50   point du high five, en % de l'écran (50,50 = le centre)
     ?test=1    fond bleu, état de la connexion et touches de test (pour un navigateur, pas pour OBS)
-                F = feed · C = cuddle · 0 = jauge à zéro · + = +200 tokens
+                F = feed · C = cuddle · H / J = high five du 1er / 2e enfant · 0-9 = jauge · + = +200 tokens
 
   États :
    1. repos   : ils respirent, clignent des yeux et font de temps en temps un petit truc entre eux
    2. feed    : la nourriture tombe, ils mâchent, puis joues roses (bulle avec le pseudo du tipeur)
    3. cuddle  : ils se serrent l'un contre l'autre, joues roses, cœurs (bulle avec le pseudo)
+   4. high five : un enfant va en sautillant jusqu'au point du high five, une main arrive, ils tapent, il revient
    La bulle disparaît dès qu'ils retournent à la boucle de repos.
 -->
 <style>
@@ -35,6 +40,9 @@
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; }
   body.test { background: #5a6b7d; }
 
+  /* Le bloc des enfants (480 x 360) dans l'écran : --hx, --hy de 0 à 1 */
+  #home { position: absolute; width: 480px; height: 360px; --hx: 0; --hy: 1;
+          left: calc(var(--hx) * (100% - 480px)); top: calc(var(--hy) * (100% - 360px)); }
   #stage { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 28px; padding-bottom: 12px; }
 
   /* Jauge de chaleur */
@@ -139,6 +147,13 @@
   .spark { font-size: 16px; animation: spark 1s ease-out forwards; }
   @keyframes spark { from { transform: scale(.3); opacity: 0; } 30% { opacity: 1; } to { transform: translate(var(--dx), -26px) scale(1); opacity: 0; } }
   .heart { font-size: 22px; animation: float 1.5s ease-out forwards; }
+  /* High five : la main, l'onde de choc et le texte */
+  .hand { position: absolute; width: 110px; height: 132px; pointer-events: none; z-index: 10; transform-origin: 40% 60%; opacity: 0; }
+  .hand svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .impact { width: 24px; height: 24px; border-radius: 50%; border: 4px solid #fff; box-sizing: border-box; z-index: 11; animation: impact .55s ease-out forwards; }
+  @keyframes impact { from { transform: scale(.3); opacity: 1; } to { transform: scale(4.5); opacity: 0; } }
+  .pop { font-weight: 800; font-size: 28px; color: #fff; white-space: nowrap; z-index: 11; text-shadow: 0 2px 0 #c2577a, 0 0 8px rgba(0,0,0,.5); animation: pop 1.3s ease-out forwards; }
+  @keyframes pop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 18% { transform: scale(1.15) rotate(-5deg); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(-34px) scale(1) rotate(-5deg); opacity: 0; } }
   .mini  { font-size: 13px; animation: float 1.8s ease-out forwards; }
   @keyframes float { from { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } to { transform: translate(var(--dx), -90px) scale(1.1); opacity: 0; } }
 
@@ -154,11 +169,13 @@
 </style>
 </head>
 <body>
-<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · OBS: <span id="obsState">…</span><br>
+<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · <b>H</b> / <b>J</b> high five (1st / 2nd kid) · OBS: <span id="obsState">…</span><br>
 Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
-<div id="bubble"></div>
-<div id="stage"></div>
-<div id="gauge"><span class="icon">🌡️</span><div class="track"><div class="fill"></div></div><span class="pct">0%</span></div>
+<div id="home">
+  <div id="bubble"></div>
+  <div id="stage"></div>
+  <div id="gauge"><span class="icon">🌡️</span><div class="track"><div class="fill"></div></div><span class="pct">0%</span></div>
+</div>
 
 <script>
 /* =========================================================
@@ -177,9 +194,11 @@ const CONFIG = {
   obsPort: 4455,
   idleEverySec: [6, 12],
   foods: ["🍪", "🍓", "🧁", "🍩", "🍬"],
+  highFiveAt: { x: 50, y: 50 },   // point du high five, en % de l'écran (ou ?hf=50,50 dans l'URL)
   bubbles: {
-    feed:   "<b>{user}</b> fed the kids 🍪",
-    cuddle: "<b>{user}</b> cuddled the kids 💕",
+    feed:     "<b>{user}</b> fed the kids 🍪",
+    cuddle:   "<b>{user}</b> cuddled the kids 💕",
+    highfive: "<b>{user}</b> high-fived {kid} ✋",
   },
 };
 
@@ -320,18 +339,19 @@ function at(el, fx, fy) {
 const bubble = document.getElementById("bubble");
 const help = document.getElementById("help");
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-function showBubble(kind, user) {
-  bubble.innerHTML = CONFIG.bubbles[kind].replace("{user}", escapeHtml(user || "Someone"));
+function showBubble(kind, user, kidName) {
+  bubble.innerHTML = CONFIG.bubbles[kind].replace("{user}", escapeHtml(user || "Someone")).replace("{kid}", escapeHtml(kidName || ""));
   // juste au-dessus du chapeau le plus haut (la pointe de la bulle dépasse de 10 px en dessous)
   const capTop = Math.min(...kidEls.map(el => el.getBoundingClientRect().top));
   const minTop = help.offsetParent ? help.offsetHeight + 4 : 4;   // en mode test, sous l'aide
-  bubble.style.top = Math.max(minTop, capTop - bubble.offsetHeight - 14) + "px";
+  const homeTop = document.getElementById("home").getBoundingClientRect().top;
+  bubble.style.top = (Math.max(minTop, capTop - bubble.offsetHeight - 14) - homeTop) + "px";
   bubble.classList.add("show");
 }
 function hideBubble() { bubble.classList.remove("show"); }
 
-function cheekSparks() {
-  kidEls.forEach(el => {
+function cheekSparks(only) {
+  (only ? [only] : kidEls).forEach(el => {
     const l = at(el, 48 / 150, 152 / 190), r = at(el, 102 / 150, 152 / 190);
     spawn("spark", "✨", l.x - 14, l.y - 10, -8);
     spawn("spark", "✨", r.x, r.y - 10, 8);
@@ -457,6 +477,112 @@ async function playCuddle({ user, amount }) {
   await wait(500);
 }
 
+/* =========================================================
+   4. High five : un enfant va au point du high five en sautillant, une main arrive, ils tapent
+   ========================================================= */
+const HAND_SVG = `<svg viewBox="0 0 100 120" aria-hidden="true">
+  <rect x="30" y="100" width="44" height="26" rx="6" fill="#c2577a" stroke="#3b2620" stroke-width="3"/>
+  <g fill="#ffd8bd" stroke="#3b2620" stroke-width="3" stroke-linejoin="round">
+    <rect x="20" y="14" width="15" height="52" rx="7.5"/>
+    <rect x="37" y="4"  width="15" height="60" rx="7.5"/>
+    <rect x="54" y="8"  width="15" height="56" rx="7.5"/>
+    <rect x="71" y="20" width="13" height="46" rx="6.5"/>
+    <rect x="3" y="48" width="15" height="40" rx="7.5" transform="rotate(-38 10 68)"/>
+    <path d="M17 54 Q17 46 26 48 L80 50 Q87 50 86 58 L84 90 Q82 112 52 112 Q22 112 19 90 Z"/>
+  </g>
+  <path d="M38 76 Q52 84 66 76" stroke="#e3a98a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>`;
+
+// Trajet en petits sauts de (x0,y0) à (x1,y1) : décalages en px par rapport à la place de l'enfant
+async function hopTravel(el, x0, y0, x1, y1) {
+  const dist = Math.hypot(x1 - x0, y1 - y0);
+  const hops = Math.max(2, Math.round(dist / 110));
+  const tilt = x1 >= x0 ? 5 : -5;
+  const frames = [];
+  for (let h = 0; h < hops; h++) {
+    for (let k = 0; k < 8; k++) {
+      const f = k / 8, p = (h + f) / hops;
+      const lift = Math.sin(Math.PI * f) * 34;
+      const squash = k === 0 ? "scale(1.06,.92)" : "scale(1,1)";
+      frames.push({ transform: `translate(${x0 + (x1 - x0) * p}px, ${y0 + (y1 - y0) * p - lift}px) rotate(${k === 0 ? 0 : tilt}deg) ${squash}` });
+    }
+  }
+  frames.push({ transform: `translate(${x1}px, ${y1}px) rotate(0deg) scale(1,1)` });
+  const anim = el.animate(frames, { duration: hops * 380, easing: "linear", fill: "forwards" });
+  await anim.finished;
+  el.style.transform = `translate(${x1}px, ${y1}px)`;
+  anim.cancel();
+}
+
+function highFiveSpot() {
+  const p = (params.get("hf") || "").split(",").map(Number);
+  const ok = p.length === 2 && p.every(Number.isFinite);
+  const x = ok ? p[0] : CONFIG.highFiveAt.x, y = ok ? p[1] : CONFIG.highFiveAt.y;
+  return { x: innerWidth * x / 100, y: innerHeight * y / 100 };
+}
+
+async function playHighFive({ user, amount, kid }) {
+  const i = Math.max(0, Math.min(kidEls.length - 1, Number(kid) || 0));
+  const el = kidEls[i];
+  showBubble("highfive", user, CONFIG.kids[i].name);
+  const r = el.getBoundingClientRect();
+  const spot = highFiveSpot();
+  // l'enfant se pose centré sur le point, un peu à gauche pour laisser la place à la main
+  const dx = spot.x - 40 - (r.left + r.width / 2), dy = spot.y + r.height / 2 - r.bottom;
+  const dir = dx >= 0 ? "look-r" : "look-l";
+  kidEls.forEach(o => o.classList.add(o === el ? dir : (o.getBoundingClientRect().left < spot.x ? "look-r" : "look-l")));
+  el.style.zIndex = 9;
+  await wait(300);
+  await hopTravel(el, 0, 0, dx, dy);
+
+  // la main arrive de la droite, à hauteur du chapeau
+  el.classList.remove("look-l"); el.classList.add("look-r");
+  const k = el.getBoundingClientRect();
+  const hand = document.createElement("div");
+  hand.className = "hand";
+  hand.innerHTML = HAND_SVG;
+  hand.style.left = (k.right - 18) + "px";
+  hand.style.top = (k.top + k.height * .05) + "px";
+  document.body.appendChild(hand);
+  await hand.animate([
+    { transform: "translate(260px,-90px) rotate(25deg)", opacity: 0 },
+    { transform: "translate(0,0) rotate(-12deg)", opacity: 1 },
+  ], { duration: 480, easing: "cubic-bezier(.2,.8,.3,1)", fill: "forwards" }).finished;
+  await wait(150);
+
+  // il saute dans la main : clap !
+  const base = `translate(${dx}px, ${dy}px)`;
+  el.animate([
+    { transform: `${base} scale(1.05,.92)` },
+    { transform: `${base} translate(10px,-30px) rotate(10deg)`, offset: .45 },
+    { transform: `${base} translate(10px,-30px) rotate(10deg)`, offset: .6 },
+    { transform: base },
+  ], { duration: 520, easing: "ease-out" });
+  await wait(230);
+  const c = { x: k.right - 6, y: k.top + k.height * .22 };
+  spawn("impact", "", c.x - 12, c.y - 12);
+  spawn("pop", "High five!", c.x - 70, c.y - 70);
+  for (let s = 0; s < 6; s++) spawn("spark", "✨", c.x - 8 + (Math.random() - .5) * 50, c.y - 10 + (Math.random() - .5) * 40, (Math.random() - .5) * 40);
+  hand.animate([
+    { transform: "translate(0,0) rotate(-12deg)", opacity: 1 },
+    { transform: "translate(-10px,4px) rotate(-18deg)", opacity: 1, offset: .2 },
+    { transform: "translate(24px,-8px) rotate(-6deg)", opacity: 1, offset: .5 },
+    { transform: "translate(280px,-110px) rotate(20deg)", opacity: 0 },
+  ], { duration: 900, easing: "ease-in", fill: "forwards" }).finished.then(() => hand.remove());
+  addHeat(amount);
+  el.classList.add("content");
+  await wait(320);
+  for (let t = 0; t < 3; t++) { cheekSparks(el); await wait(450); }
+  el.classList.remove("content");
+
+  // retour à sa place
+  el.classList.remove("look-r"); el.classList.add(dx >= 0 ? "look-l" : "look-r");
+  await hopTravel(el, dx, dy, 0, 0);
+  el.style.transform = ""; el.style.zIndex = "";
+  resetPoses();
+  await wait(300);
+}
+
 async function runQueue() {
   if (busy) return;
   busy = true;
@@ -467,6 +593,7 @@ async function runQueue() {
     const ev = pending.shift();
     if (ev.type === "feed") await playFeed(ev);
     else if (ev.type === "cuddle") await playCuddle(ev);
+    else if (ev.type === "highfive") await playHighFive(ev);
     if (pending.length) await wait(300);
   }
   hideBubble();   // retour à la boucle de repos : la bulle disparaît
@@ -489,13 +616,14 @@ function handleEvent(ev) {
   if (ev.type === "reset") { heatTokens = 0; save(); render(); return; }
   if (ev.type === "heat") { addHeat(ev.amount); return; }
   if (ev.type === "set") { heatTokens = CONFIG.heatMaxTokens * Math.max(0, Math.min(100, Number(ev.pct) || 0)) / 100; render(); return; }   // page de test : sans enregistrer
-  if (ev.type !== "feed" && ev.type !== "cuddle") return;
-  if (pending.length < 8) pending.push({ type: ev.type, user: ev.user, amount: Number(ev.amount) || 0 });
+  if (ev.type !== "feed" && ev.type !== "cuddle" && ev.type !== "highfive") return;
+  if (pending.length < 8) pending.push({ type: ev.type, user: ev.user, amount: Number(ev.amount) || 0, kid: Number(ev.kid) || 0 });
   runQueue();
 }
 window.kids = {
   feed: (user, amount) => handleEvent({ type: "feed", user, amount }),
   cuddle: (user, amount) => handleEvent({ type: "cuddle", user, amount }),
+  highfive: (kid, user, amount) => handleEvent({ type: "highfive", kid, user, amount }),
   reset: () => handleEvent({ type: "reset" }),
   get heat() { return heatTokens; },
 };
@@ -543,6 +671,14 @@ function connectOBS() {
    Options d'URL et mode test
    ========================================================= */
 if (params.get("gauge") === "0") gauge.style.display = "none";
+{ // position du bloc des enfants : ?home=x,y (0 à 1)
+  const h = (params.get("home") || "").split(",").map(Number);
+  if (h.length === 2 && h.every(Number.isFinite)) {
+    const home = document.getElementById("home");
+    home.style.setProperty("--hx", Math.max(0, Math.min(1, h[0])));
+    home.style.setProperty("--hy", Math.max(0, Math.min(1, h[1])));
+  }
+}
 if (params.get("names") === "0") document.querySelectorAll(".kid .name").forEach(n => n.style.display = "none");
 
 // Page de démo : la page qui affiche l'overlay envoie les commandes par postMessage
@@ -554,6 +690,8 @@ if (params.has("test")) {
     const k = e.key.toLowerCase();
     if (k === "f") kids.feed("Tester", 25);
     if (k === "c") kids.cuddle("Tester", 50);
+    if (k === "h") kids.highfive(0, "Tester", 40);
+    if (k === "j") kids.highfive(1, "Tester", 40);
     if (k === "0") kids.reset();
     if (/^[1-9]$/.test(k)) { heatTokens = CONFIG.heatMaxTokens * Number(k) / 10; save(); render(); }   // 1-9 = 10-90 %
     if (k === "+") { addHeat(200); }

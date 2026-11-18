@@ -76,16 +76,18 @@ Tout se règle dans la popup, puis **Save** :
 
 ## 5. Tester avec de vrais tips (compte viewer)
 
-1. Ouvrir une room Stripchat en live où ça tipe.
-2. Dans la popup, cocher **Test mode: any tip triggers an animation**, puis cliquer sur **Save**. Chaque tip lance alors feed, puis cuddle, puis feed…
-3. La liste **Latest tips seen** de la popup montre ce que l'extension a vu.
+1. Ouvrir une room Stripchat en live où ça tipe, avec un tip menu.
+2. Dans la popup, section **Triggers** : mettre le nom de deux items de son menu (un pour feed, un pour cuddle), avec **price 0**, puis **Save**.
+3. Quand un de ces items est tipé, l'animation part dans OBS. Elle s'ajoute à la liste **Latest animations**, avec le nom de l'item.
 
-Pour me montrer le format d'un tip du tip menu : juste après ce tip, clique sur **📋 Copy the HTML of the latest chat messages** (section *Diagnostics*) et colle-moi le résultat. Si la liste reste vide alors que des tips passent dans le chat, fais pareil : c'est que Stripchat affiche les tips autrement que prévu, et je corrige.
+Seuls ces tips déclenchent une animation :
 
-Après le test, **décocher le Test mode**. En vrai, seuls ces tips déclenchent une animation :
+- un tip **du tip menu** dont le nom d'item contient le texte indiqué. Majuscules, accents et emojis ne comptent pas : `Feed the kids` reconnaît « 🍪 Feed the kids 🍪 ». Un message libre qui contient ce texte ne déclenche rien ;
+- ou un tip du **montant exact** indiqué, si le prix n'est pas 0.
 
-- un tip dont le message contient **le nom de l'item** du tip menu (« Feed the kids », « Cuddle the kids ») ;
-- ou un tip du **montant exact** indiqué (25 et 50 par défaut, modifiables dans la popup).
+Si plus rien ne se déclenche un jour, c'est sans doute que Stripchat a changé l'affichage du chat. La détection est dans `extension/content.js`.
+
+Après chaque modification de l'extension : `chrome://extensions` → **↻** sur Mushroom Kids, **puis F5** sur l'onglet Stripchat.
 
 ## Tester l'overlay sans OBS
 
