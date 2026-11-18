@@ -20,7 +20,7 @@
     ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
     ?home=0,1   position du bloc des enfants : x,y de 0 à 1 (0,1 = en bas à gauche ; 1,1 = en bas à droite)
     ?me=50,40   où est la streameuse à l'écran, en % (il se tourne vers elle pour le high five)
-    ?hf=20,60   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
+    ?hf=20,56   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
     ?front=39,97  où il pose les pieds pour le high five aux viewers (devant, en grand)
     ?test=1    fond bleu, état de la connexion et touches de test (pour un navigateur, pas pour OBS)
                 F = feed · C = cuddle · H = high five · 0-9 = jauge · + = +200 tokens
@@ -180,7 +180,7 @@
 </style>
 </head>
 <body>
-<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · <b>H</b> High five (+40 tk) · OBS: <span id="obsState">…</span><br>
+<div id="help"><b>F</b> Feed the kid (+25 tk) · <b>C</b> Cuddle the kid (+50 tk) · <b>H</b> High five (+40 tk) · OBS: <span id="obsState">…</span><br>
 Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
 <div id="home">
   <div id="bubble"></div>
@@ -205,7 +205,7 @@ const CONFIG = {
   idleEverySec: [6, 12],
   foods: ["🍪", "🍓", "🧁", "🍩", "🍬"],
   streamerAt: { x: 50, y: 40 },   // où est la streameuse à l'écran, en % (ou ?me=50,40) : il se tourne vers elle
-  highFiveAt: { x: 20, y: 60 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=20,60)
+  highFiveAt: { x: 20, y: 56 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=20,56)
   frontAt:    { x: 39, y: 97 },   // où il pose les pieds pour taper dans la main des viewers (ou ?front=39,97)
   frontZoom:  2,                  // combien de fois plus grand il devient en arrivant devant la caméra
   bubbles: {
@@ -762,6 +762,19 @@ render();
 requestAnimationFrame(() => requestAnimationFrame(() => gauge.classList.add("ready")));
 idleLoop();
 if (params.get("obs") !== "0") connectOBS(); else setObsState("off (demo)");
+
+// Mode test : prévient si la source OBS est trop petite (elle doit couvrir tout l'écran, ex. 1920 x 1080)
+if (params.has("test")) {
+  const warn = document.createElement("div");
+  warn.style.cssText = "color:#ffd0d0;background:#a3263a;padding:2px 6px;margin-top:3px;border-radius:4px;display:none";
+  help.appendChild(warn);
+  const check = () => {
+    const small = innerWidth < 1280;
+    warn.style.display = small ? "block" : "none";
+    warn.textContent = small ? `⚠ Source is ${innerWidth}×${innerHeight}: set Width 1920, Height 1080 in OBS, then Transform → Fit to screen` : "";
+  };
+  addEventListener("resize", check); check();
+}
 </script>
 </body>
 </html>
