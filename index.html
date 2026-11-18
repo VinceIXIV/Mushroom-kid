@@ -191,7 +191,8 @@ const previews = [];
 function makePreview(box, onLoad, w = 480, h = 360) {
   const frame = document.createElement("iframe");
   frame.title = "Mushroom Kids overlay";
-  frame.src = OVERLAY;
+  // écran 16:9 réduit : la streameuse imaginaire à droite du centre, le high five à côté d'elle
+  frame.src = OVERLAY + (w > 480 ? "&me=72,38&hf=55,62" : "");
   frame.style.width = w + "px";
   frame.style.height = h + "px";
   box.style.aspectRatio = `${w} / ${h}`;
