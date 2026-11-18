@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mushroom Kids</title>
+<!--
+  Overlay OBS « les enfants » : source Navigateur 480 x 360, fond transparent.
+  La streameuse place et redimensionne la source où elle veut dans OBS.
+
+  Les animations sont déclenchées par l'extension « Les enfants champignons » via le serveur WebSocket d'OBS.
+  Mot de passe WebSocket : à mettre dans CONFIG.obsPassword ci-dessous, ou dans l'URL : overlay.html?pw=xxxx
+
+  Options d'URL :
+    ?pw=xxxx    mot de passe du WebSocket OBS
+    ?port=4455  port du WebSocket OBS
+    ?gauge=0    cache la jauge
+    ?names=0    cache les noms des enfants
+    ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
+    ?test=1    fond bleu, état de la connexion et touches de test (pour un navigateur, pas pour OBS)
+                F = feed · C = cuddle · 0 = jauge à zéro · + = +200 tokens
+
+  États :
+   1. repos   : ils respirent, clignent des yeux et font de temps en temps un petit truc entre eux
+   2. feed    : la nourriture tombe, ils mâchent, puis joues roses (bulle avec le pseudo du tipeur)
+   3. cuddle  : ils se serrent l'un contre l'autre, joues roses, cœurs (bulle avec le pseudo)
+   La bulle disparaît dès qu'ils retournent à la boucle de repos.
+-->
+<style>
+  :root {
+    --ink: #3b2620;
+    --cheek: #ff8fa3;
+    --bar-bg: rgba(30, 18, 14, .55);
+    --heat: linear-gradient(90deg, #6ec6ff 0%, #b9e2ff 25%, #ffd166 55%, #ff9a3d 78%, #ff5a3d 100%);
+  }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; }
+  body.test { background: #5a6b7d; }
+
+  #stage { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 28px; padding-bottom: 12px; }
+
+  /* Jauge de chaleur */
+  #gauge { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: 420px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; background: var(--bar-bg); border-radius: 999px; padding: 6px 14px; color: #fff; font-weight: 700; font-size: 18px; text-shadow: 0 1px 2px #000; z-index: 5; }
+  #gauge .track { flex: 1; height: 14px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
+  #gauge .fill { height: 100%; width: 0; border-radius: 999px; background: var(--heat); background-size: 300px 100%; }
+  #gauge.ready .fill { transition: width 1.2s ease; }   /* pas d'animation au chargement */
+  #gauge .icon { width: 26px; text-align: center; }
+  #gauge .pct { min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+  #gauge.hot { box-shadow: 0 0 14px rgba(255, 120, 60, .55); }
+
+  /* ---------- Un enfant ---------- */
+  .kid { position: relative; width: 150px; height: 190px; margin-bottom: 78px; }
+  .kid svg { width: 100%; height: 100%; overflow: visible; }
+  .kid .name { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; color: #fff; font-weight: 700; font-size: 17px; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.6); }
+
+  .pose  { transform-origin: 75px 180px; transition: transform .6s ease-in-out; }
+  .body  { transform-origin: 75px 180px; animation: breathe 3s ease-in-out infinite; }
+  .eyes  { transform-origin: 75px 138px; animation: blink 5s infinite; }
+  .look  { transition: transform .4s ease-out; }
+  .cheek { transform-box: fill-box; transform-origin: center; transition: transform .5s, opacity .5s, fill .5s; opacity: .55; }
+  .eye-happy, .mouth-open, .mouth-sad, .mouth-grin, .mouth-arc, .mouth-grin-s { display: none; }
+
+  @keyframes breathe { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.025,.975); } }
+  @keyframes blink   { 0%,94%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+
+  /* 1. Repos : petites scènes entre eux */
+  .lean-l .pose { transform: rotate(-7deg); }
+  .lean-r .pose { transform: rotate(7deg); }
+  .look-l .look { transform: translateX(-3.5px); }
+  .look-r .look { transform: translateX(3.5px); }
+  .hop .pose    { animation: hop .5s cubic-bezier(.3,.7,.4,1) 2; }
+  .shy .cheek   { opacity: .9; transform: scale(1.25); }
+  @keyframes hop { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-22px); } }
+
+  /* Jauge très basse : ils ont froid */
+  .cold .mouth-smile { display: none; }
+  .cold .mouth-sad   { display: inline; }
+  .cold .cheek       { opacity: .12; }
+  .cold .body        { animation: shiver 3s linear infinite; }
+  @keyframes shiver { 0%,4%,8%,12%,16% { transform: translateX(-1.5px); } 2%,6%,10%,14% { transform: translateX(1.5px); } 18%,100% { transform: translateX(0); } }
+
+  /* Humeur au repos selon la chaleur (CONFIG.moods) : comfy, cosy, happy, blissful */
+  .comfy .cheek { opacity: .7; transform: scale(1.06); }
+  .comfy .body  { animation-duration: 3.6s; }   /* respiration plus calme, apaisée */
+  .cosy .cheek  { opacity: .8; transform: scale(1.12); }
+  /* La bouche évolue : « w » (neutre) → arc (comfy) → petit sourire ouvert (cosy) → grand sourire (happy, blissful) */
+  .comfy .mouth-smile, .cosy .mouth-smile { display: none; }
+  .comfy .mouth-arc   { display: inline; }
+  .cosy .mouth-grin-s { display: inline; }
+  .happy .cheek, .blissful .cheek { opacity: .95; transform: scale(1.22); fill: #ff7f9a; }
+  .happy .mouth-smile, .blissful .mouth-smile { display: none; }
+  .happy .mouth-grin, .blissful .mouth-grin { display: inline; }
+  .happy .body    { animation: bob 2.2s ease-in-out infinite; }
+  .blissful .body { animation: bob 1.8s ease-in-out infinite; }
+  .blissful .cheek { animation: glowSoft 2s ease-in-out infinite; }
+  /* blissful : par moments, yeux fermés de bonheur ^^ */
+  .blissful .eye-happy { display: inline; opacity: 0; animation: beamOn 7s infinite; }
+  .blissful .eye { animation: beamOff 7s infinite; }
+  .blissful.content .eye-happy { animation: none; opacity: 1; }
+  .blissful.kid:nth-child(2) .eye, .blissful.kid:nth-child(2) .eye-happy { animation-delay: -2.5s; }
+  @keyframes bob      { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-3px) scale(1.03,.97); } }
+  @keyframes glowSoft { 0%,100% { transform: scale(1.22); } 50% { transform: scale(1.36); } }
+  @keyframes beamOn   { 0%,55% { opacity: 0; } 58%,92% { opacity: 1; } 95%,100% { opacity: 0; } }
+  @keyframes beamOff  { 0%,55% { opacity: 1; } 58%,92% { opacity: 0; } 95%,100% { opacity: 1; } }
+
+  /* 2. Manger */
+  .eating .body { animation: chomp .32s ease-in-out infinite; }
+  .eating .mouth-smile, .eating .mouth-sad { display: none; }
+  .eating .mouth-open { display: inline; animation: jaw .32s ease-in-out infinite; transform-origin: 75px 156px; }
+  .eating .cheek { opacity: .55; }
+  @keyframes chomp { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.05,.94); } }
+  @keyframes jaw   { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.25); } }
+
+  /* Content (après manger, et pendant le câlin) : yeux ^^ et joues qui gonflent et rosissent */
+  .content .eyes, .cuddle .eyes { animation: none; }
+  .content .eye, .cuddle .eye { display: none; }
+  .content .eye-happy, .cuddle .eye-happy { display: inline; }
+  .content .mouth-sad, .cuddle .mouth-sad { display: none; }
+  .content .mouth-smile, .cuddle .mouth-smile { display: inline; }
+  .content .cheek, .cuddle .cheek { opacity: 1; fill: #ff6f8f; animation: glow 1s ease-in-out infinite; }
+  .content .body { animation: wiggle 1s ease-in-out infinite; }
+  @keyframes glow   { 0%,100% { transform: scale(1.35); } 50% { transform: scale(1.6); } }
+  @keyframes wiggle { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+  /* 3. Câlin : ils se penchent fort l'un vers l'autre et se balancent ensemble */
+  .cuddle.lean-r .pose { transform: rotate(12deg) translateX(14px); }
+  .cuddle.lean-l .pose { transform: rotate(-12deg) translateX(-14px); }
+  .cuddle .body { animation: sway 1.4s ease-in-out infinite; }
+  /* Pendant manger, content et câlin : seulement la bouche de l'animation */
+  .eating .mouth-arc, .eating .mouth-grin-s, .eating .mouth-grin,
+  .content .mouth-arc, .content .mouth-grin-s, .content .mouth-grin,
+  .cuddle .mouth-arc, .cuddle .mouth-grin-s, .cuddle .mouth-grin { display: none; }
+  @keyframes sway { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px) scale(1.02,.98); } }
+
+  /* Effets */
+  .fx { position: absolute; pointer-events: none; z-index: 4; }
+  .food { font-size: 34px; animation: drop .7s cubic-bezier(.5,0,.8,.6) forwards; }
+  @keyframes drop { from { transform: translateY(-160px) rotate(-30deg); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(0) rotate(20deg); opacity: 1; } }
+  .crumb { font-size: 14px; color: #c9a27e; animation: crumb .7s ease-out forwards; }
+  @keyframes crumb { to { transform: translate(var(--dx), 40px); opacity: 0; } }
+  .spark { font-size: 16px; animation: spark 1s ease-out forwards; }
+  @keyframes spark { from { transform: scale(.3); opacity: 0; } 30% { opacity: 1; } to { transform: translate(var(--dx), -26px) scale(1); opacity: 0; } }
+  .heart { font-size: 22px; animation: float 1.5s ease-out forwards; }
+  .mini  { font-size: 13px; animation: float 1.8s ease-out forwards; }
+  @keyframes float { from { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } to { transform: translate(var(--dx), -90px) scale(1.1); opacity: 0; } }
+
+  /* Bulle de dialogue avec le pseudo du tipeur */
+  #bubble { position: absolute; left: 50%; top: 12px; transform: translateX(-50%) scale(.6); opacity: 0; width: max-content; max-width: 92%; box-sizing: border-box; background: #fff; color: var(--ink); font-weight: 700; font-size: 17px; padding: 7px 16px; border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: opacity .25s, transform .25s cubic-bezier(.3,1.5,.6,1); text-align: center; z-index: 6; }
+  #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  #bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-bottom: 0; border-top-color: #fff; }
+  #bubble b { color: #c2577a; }
+
+  #help { position: absolute; top: 0; left: 0; right: 0; color: #fff; font: 11px/1.5 "Segoe UI", system-ui, sans-serif; background: rgba(0,0,0,.5); padding: 3px 8px; white-space: nowrap; overflow: hidden; display: none; z-index: 7; }
+  #help b { display: inline-block; min-width: 9px; text-align: center; background: rgba(255,255,255,.2); border-radius: 3px; padding: 0 3px; }
+  body.test #help { display: block; }
+</style>
+</head>
+<body>
+<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · OBS: <span id="obsState">…</span><br>
+Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
+<div id="bubble"></div>
+<div id="stage"></div>
+<div id="gauge"><span class="icon">🌡️</span><div class="track"><div class="fill"></div></div><span class="pct">0%</span></div>
+
+<script>
+/* =========================================================
+   RÉGLAGES
+   ========================================================= */
+const CONFIG = {
+  kids: [
+    { name: "Bibi",  cap: "#eadbbd", size: 1.0 },   // chapeau crème clair
+    { name: "Pouic", cap: "#9fd6c6", size: 0.88 },  // chapeau vert d'eau
+  ],
+  heatMaxTokens: 2000,   // jauge pleine après 2000 tokens de feed + cuddle cumulés
+  coldBelow: 10,         // en dessous de 10 % : ils ont froid et frissonnent
+  hotAbove: 80,          // au-dessus de 80 % : la jauge rougeoie
+  moods: [45, 60, 70, 90],   // paliers de joie au repos : comfy dès 45 %, cosy dès 60 %, happy dès 70 %, blissful dès 90 %
+  obsPassword: "",       // mot de passe du serveur WebSocket d'OBS (ou ?pw= dans l'URL)
+  obsPort: 4455,
+  idleEverySec: [6, 12],
+  foods: ["🍪", "🍓", "🧁", "🍩", "🍬"],
+  bubbles: {
+    feed:   "<b>{user}</b> fed the kids 🍪",
+    cuddle: "<b>{user}</b> cuddled the kids 💕",
+  },
+};
+
+/* =========================================================
+   Dessin des enfants (SVG)
+   ========================================================= */
+function kidSVG(k, i) {
+  const id = "k" + i;
+  return `
+  <svg viewBox="0 0 150 190">
+    <defs>
+      <filter id="fur${id}" x="-15%" y="-15%" width="130%" height="130%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="${i * 7 + 3}" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G" result="d"/>
+        <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="${i + 1}" result="grain"/>
+        <feColorMatrix in="grain" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .12 0" result="g2"/>
+        <feComposite in="g2" in2="d" operator="in" result="g3"/>
+        <feMerge><feMergeNode in="d"/><feMergeNode in="g3"/></feMerge>
+      </filter>
+      <radialGradient id="cap${id}" cx="38%" cy="28%" r="80%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".35"/>
+        <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".25"/>
+      </radialGradient>
+      <linearGradient id="stem${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e9dccb"/>
+        <stop offset=".35" stop-color="#fbf4ea"/>
+        <stop offset="1" stop-color="#f3dcc6"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="75" cy="184" rx="44" ry="6" fill="rgba(0,0,0,.25)"/>
+    <g class="pose"><g class="body">
+      <path d="M40 104 Q34 178 75 179 Q116 178 110 104 Z" fill="url(#stem${id})"/>
+      <g filter="url(#fur${id})">
+        <path d="M4 108 Q-2 16 75 10 Q152 16 146 108 Q112 122 75 120 Q38 122 4 108 Z" fill="${k.cap}"/>
+        <path d="M4 108 Q-2 16 75 10 Q152 16 146 108 Q112 122 75 120 Q38 122 4 108 Z" fill="url(#cap${id})"/>
+        <path d="M66 12 Q70 0 80 4 Q74 6 75 12 Z" fill="${k.cap}"/>
+      </g>
+      <g class="eyes">
+        <g class="eye"><g class="look">
+          <ellipse cx="60" cy="138" rx="7" ry="9" fill="var(--ink)"/>
+          <ellipse cx="90" cy="138" rx="7" ry="9" fill="var(--ink)"/>
+          <circle cx="62.5" cy="134.5" r="2.8" fill="#fff"/>
+          <circle cx="92.5" cy="134.5" r="2.8" fill="#fff"/>
+          <circle cx="58" cy="141.5" r="1.2" fill="#fff"/>
+          <circle cx="88" cy="141.5" r="1.2" fill="#fff"/>
+        </g></g>
+        <path class="eye-happy" d="M53 140 Q60 130 67 140 M83 140 Q90 130 97 140" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      </g>
+      <ellipse class="cheek" cx="48" cy="152" rx="8" ry="4.5" fill="var(--cheek)"/>
+      <ellipse class="cheek" cx="102" cy="152" rx="8" ry="4.5" fill="var(--cheek)"/>
+      <path class="mouth-smile" d="M70 152 Q72.5 156 75 152 Q77.5 156 80 152" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="mouth-arc" d="M68.5 151.5 Q75 158.5 81.5 151.5" stroke="var(--ink)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path class="mouth-grin-s" d="M69.5 151.5 Q75 151.5 80.5 151.5 Q79 157 75 157 Q71 157 69.5 151.5 Z" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
+      <path class="mouth-grin"d="M68 151 Q75 151 82 151 Q80 160 75 160 Q70 160 68 151 Z" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
+      <path class="mouth-sad"d="M69 158 Q75 152 81 158" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse class="mouth-open" cx="75" cy="156" rx="6" ry="6" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2"/>
+    </g></g>
+  </svg>
+  <div class="name">${k.name}</div>`;
+}
+
+const stage = document.getElementById("stage");
+const kidEls = CONFIG.kids.map((k, i) => {
+  const el = document.createElement("div");
+  el.className = "kid";
+  el.innerHTML = kidSVG(k, i);
+  el.style.width = 150 * (k.size || 1) + "px";
+  el.style.height = 190 * (k.size || 1) + "px";
+  el.querySelector(".body").style.animationDelay = (Math.random() * -3).toFixed(2) + "s";
+  stage.appendChild(el);
+  return el;
+});
+
+/* =========================================================
+   Jauge de chaleur : ne bouge qu'avec les tips feed / cuddle
+   ========================================================= */
+const STORE_KEY = "kids-heat-tokens";
+let heatTokens = 0;
+try { heatTokens = Number(JSON.parse(localStorage.getItem(STORE_KEY))) || 0; } catch (e) {}
+const MAX_KEY = "kids-heat-max";   // réglage reçu de l'extension
+try { CONFIG.heatMaxTokens = Number(localStorage.getItem(MAX_KEY)) || CONFIG.heatMaxTokens; } catch (e) {}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(heatTokens)); } catch (e) {} }
+
+const fill = document.querySelector("#gauge .fill");
+const pct = document.querySelector("#gauge .pct");
+const track = document.querySelector("#gauge .track");
+const icon = document.querySelector("#gauge .icon");
+const gauge = document.getElementById("gauge");
+const heatPct = () => Math.max(0, Math.min(100, heatTokens / CONFIG.heatMaxTokens * 100));
+
+function render() {
+  const v = Math.round(heatPct());
+  fill.style.width = v + "%";
+  fill.style.backgroundSize = track.clientWidth + "px 100%";
+  pct.textContent = v + "%";
+  icon.textContent = v < CONFIG.coldBelow ? "🥶" : v >= CONFIG.hotAbove ? "🔥" : "🌡️";
+  gauge.classList.toggle("hot", v >= CONFIG.hotAbove);
+  const m = moodLevel();
+  kidEls.forEach(el => {
+    el.classList.toggle("cold", v < CONFIG.coldBelow && !busy);
+    MOOD_NAMES.forEach((name, k) => el.classList.toggle(name, m === k + 1 && !busy));
+  });
+  // Page de présentation : l'overlay lui donne son état (compteur de tokens, humeur). Rien dans OBS.
+  if (window.parent !== window) {
+    window.parent.postMessage({ app: "enfants-champignons", type: "state", tokens: Math.round(heatTokens),
+      max: CONFIG.heatMaxTokens, pct: v, mood: v < CONFIG.coldBelow ? "cold" : (MOOD_NAMES[m - 1] || "neutral") }, "*");
+  }
+}
+// 0 = neutre, 1 = comfy, 2 = cosy, 3 = happy, 4 = blissful
+const MOOD_NAMES = ["comfy", "cosy", "happy", "blissful"];   // niveaux 1 à 4 ; 0 = neutre
+const moodLevel = () => CONFIG.moods.filter(t => heatPct() >= t).length;
+function addHeat(tokens) { heatTokens = Math.min(CONFIG.heatMaxTokens, heatTokens + Math.max(0, Number(tokens) || 0)); save(); render(); }
+
+/* =========================================================
+   Outils d'animation
+   ========================================================= */
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const POSE_CLASSES = ["lean-l", "lean-r", "look-l", "look-r", "hop", "shy"];
+const resetPoses = () => kidEls.forEach(el => el.classList.remove(...POSE_CLASSES));
+
+function spawn(cls, text, x, y, dx) {
+  const s = document.createElement("div");
+  s.className = "fx " + cls;
+  s.textContent = text;
+  s.style.left = x + "px";
+  s.style.top = y + "px";
+  if (dx !== undefined) s.style.setProperty("--dx", dx + "px");
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 1600);
+}
+function at(el, fx, fy) {
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width * fx, y: r.top + r.height * fy };
+}
+
+const bubble = document.getElementById("bubble");
+const help = document.getElementById("help");
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function showBubble(kind, user) {
+  bubble.innerHTML = CONFIG.bubbles[kind].replace("{user}", escapeHtml(user || "Someone"));
+  // juste au-dessus du chapeau le plus haut (la pointe de la bulle dépasse de 10 px en dessous)
+  const capTop = Math.min(...kidEls.map(el => el.getBoundingClientRect().top));
+  const minTop = help.offsetParent ? help.offsetHeight + 4 : 4;   // en mode test, sous l'aide
+  bubble.style.top = Math.max(minTop, capTop - bubble.offsetHeight - 14) + "px";
+  bubble.classList.add("show");
+}
+function hideBubble() { bubble.classList.remove("show"); }
+
+function cheekSparks() {
+  kidEls.forEach(el => {
+    const l = at(el, 48 / 150, 152 / 190), r = at(el, 102 / 150, 152 / 190);
+    spawn("spark", "✨", l.x - 14, l.y - 10, -8);
+    spawn("spark", "✨", r.x, r.y - 10, 8);
+  });
+}
+
+/* =========================================================
+   1. Repos : petites scènes entre eux
+   ========================================================= */
+function neighbours() {
+  const i = Math.floor(Math.random() * (kidEls.length - 1));
+  return [kidEls[i], kidEls[i + 1]];
+}
+const IDLE_SCENES = [
+  async () => { const [a, b] = neighbours(); a.classList.add("look-r"); b.classList.add("look-l"); await wait(2200); },
+  async () => {
+    const [a, b] = neighbours();
+    a.classList.add("look-r"); b.classList.add("look-l");
+    await wait(500);
+    a.classList.add("lean-r", "shy"); b.classList.add("lean-l", "shy");
+    await wait(1600);
+  },
+  async () => {
+    const j = Math.floor(Math.random() * kidEls.length);
+    kidEls.forEach((el, k) => { if (k < j) el.classList.add("look-r"); if (k > j) el.classList.add("look-l"); });
+    await wait(400);
+    kidEls[j].classList.add("hop");
+    await wait(1400);
+  },
+  async () => {
+    kidEls.forEach(el => el.classList.add("look-l"));
+    await wait(1200);
+    kidEls.forEach(el => { el.classList.remove("look-l"); el.classList.add("look-r"); });
+    await wait(1200);
+  },
+];
+
+// Scènes en plus quand ils sont heureux (happy et blissful)
+const HAPPY_SCENES = [
+  async () => {   // petit saut ensemble
+    kidEls.forEach((el, k) => el.classList.add(k === 0 ? "look-r" : "look-l"));
+    await wait(400);
+    kidEls.forEach(el => el.classList.add("hop"));
+    await wait(1400);
+  },
+  async () => {   // ils rayonnent : yeux ^^, joues qui brillent
+    kidEls.forEach(el => el.classList.add("content"));
+    cheekSparks(); await wait(800); cheekSparks(); await wait(800);
+    kidEls.forEach(el => el.classList.remove("content"));
+  },
+];
+
+async function idleLoop() {
+  while (true) {
+    const mood = moodLevel();
+    const [lo, hi] = mood === 4 ? [3, 7] : mood === 3 ? [4, 9] : CONFIG.idleEverySec;   // plus ils sont heureux, plus ils bougent
+    await wait((lo + Math.random() * (hi - lo)) * 1000);
+    if (busy) continue;
+    idleRunning = true;
+    await pick(moodLevel() >= 3 ? IDLE_SCENES.concat(HAPPY_SCENES) : IDLE_SCENES)();
+    resetPoses();
+    idleRunning = false;
+  }
+}
+
+// Petites étincelles / cœurs qui flottent au repos, d'autant plus que la jauge est haute
+setInterval(() => {
+  const mood = moodLevel();
+  if (busy || !mood) return;
+  const chance = [0, .03, .07, .13, .22][mood];
+  kidEls.forEach(el => {
+    if (Math.random() > chance) return;
+    const p = at(el, .2 + Math.random() * .6, .1 + Math.random() * .2);
+    if (mood === 4 && Math.random() < .5) spawn("mini", pick(["💕", "💗"]), p.x - 6, p.y, (Math.random() - .5) * 30);
+    else spawn("spark", "✨", p.x - 8, p.y, (Math.random() - .5) * 20);
+  });
+}, 1000);
+
+/* =========================================================
+   2. Feed  et  3. Cuddle
+   ========================================================= */
+let busy = false;
+let idleRunning = false;
+const pending = [];
+
+async function playFeed({ user, amount }) {
+  showBubble("feed", user);
+  kidEls.forEach((el, i) => setTimeout(() => {
+    const p = at(el, .5, .82);
+    spawn("food", pick(CONFIG.foods), p.x - 17, p.y - 26);
+  }, i * 180));
+  await wait(700);
+  kidEls.forEach(el => el.classList.add("eating"));
+  for (let t = 0; t < 6; t++) {
+    kidEls.forEach(el => { const p = at(el, .5, .84); spawn("crumb", "•", p.x, p.y, (Math.random() - .5) * 60); });
+    await wait(300);
+  }
+  kidEls.forEach(el => el.classList.remove("eating"));
+  addHeat(amount);
+  kidEls.forEach(el => el.classList.add("content"));
+  for (let t = 0; t < 4; t++) { cheekSparks(); await wait(600); }
+  await wait(500);
+  kidEls.forEach(el => el.classList.remove("content"));
+}
+
+async function playCuddle({ user, amount }) {
+  showBubble("cuddle", user);
+  const first = kidEls[0], last = kidEls[kidEls.length - 1];
+  first.classList.add("look-r"); last.classList.add("look-l");
+  await wait(400);
+  first.classList.add("lean-r"); last.classList.add("lean-l");
+  kidEls.forEach(el => el.classList.add("cuddle"));
+  addHeat(amount);
+  for (let t = 0; t < 6; t++) {
+    const a = at(first, .85, .35), b = at(last, .15, .35);
+    spawn("heart", pick(["💕", "💗", "💖"]), (a.x + b.x) / 2 - 11, a.y, (Math.random() - .5) * 60);
+    if (t % 2 === 0) cheekSparks();
+    await wait(500);
+  }
+  await wait(400);
+  kidEls.forEach(el => el.classList.remove("cuddle"));
+  resetPoses();
+  await wait(500);
+}
+
+async function runQueue() {
+  if (busy) return;
+  busy = true;
+  while (idleRunning) await wait(100);   // laisse finir la petite scène en cours
+  resetPoses();
+  kidEls.forEach(el => el.classList.remove("cold", ...MOOD_NAMES));
+  while (pending.length) {
+    const ev = pending.shift();
+    if (ev.type === "feed") await playFeed(ev);
+    else if (ev.type === "cuddle") await playCuddle(ev);
+    if (pending.length) await wait(300);
+  }
+  hideBubble();   // retour à la boucle de repos : la bulle disparaît
+  busy = false;
+  render();
+}
+
+/* =========================================================
+   Entrées : événements venant de l'extension (via OBS) ou du mode test
+   ========================================================= */
+function handleEvent(ev) {
+  if (!ev || !ev.type) return;
+  // Le 100 % de la jauge se règle dans l'extension, qui l'envoie avec chaque événement
+  if (Number(ev.heatMax) > 0 && Number(ev.heatMax) !== CONFIG.heatMaxTokens) {
+    CONFIG.heatMaxTokens = Number(ev.heatMax);
+    try { localStorage.setItem(MAX_KEY, String(CONFIG.heatMaxTokens)); } catch (e) {}
+    render();
+  }
+  if (ev.type === "config") return;
+  if (ev.type === "reset") { heatTokens = 0; save(); render(); return; }
+  if (ev.type === "heat") { addHeat(ev.amount); return; }
+  if (ev.type === "set") { heatTokens = CONFIG.heatMaxTokens * Math.max(0, Math.min(100, Number(ev.pct) || 0)) / 100; render(); return; }   // page de test : sans enregistrer
+  if (ev.type !== "feed" && ev.type !== "cuddle") return;
+  if (pending.length < 8) pending.push({ type: ev.type, user: ev.user, amount: Number(ev.amount) || 0 });
+  runQueue();
+}
+window.kids = {
+  feed: (user, amount) => handleEvent({ type: "feed", user, amount }),
+  cuddle: (user, amount) => handleEvent({ type: "cuddle", user, amount }),
+  reset: () => handleEvent({ type: "reset" }),
+  get heat() { return heatTokens; },
+};
+
+/* =========================================================
+   Connexion au serveur WebSocket d'OBS (v5)
+   ========================================================= */
+const params = new URLSearchParams(location.search);
+const obsState = document.getElementById("obsState");
+function setObsState(s) { obsState.textContent = s; }
+
+async function b64sha(str) {
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return btoa(String.fromCharCode(...new Uint8Array(h)));
+}
+
+function connectOBS() {
+  const port = params.get("port") || CONFIG.obsPort;
+  const password = params.get("pw") || CONFIG.obsPassword;
+  let ws;
+  try { ws = new WebSocket(`ws://127.0.0.1:${port}`); } catch (e) { setTimeout(connectOBS, 5000); return; }
+  setObsState("connecting…");
+  ws.onmessage = async (e) => {
+    const m = JSON.parse(e.data);
+    if (m.op === 0) {
+      const d = { rpcVersion: 1, eventSubscriptions: 1 }; // 1 = événements « General », dont CustomEvent
+      if (m.d.authentication) {
+        const { challenge, salt } = m.d.authentication;
+        d.authentication = await b64sha((await b64sha(password + salt)) + challenge);
+      }
+      ws.send(JSON.stringify({ op: 1, d }));
+    } else if (m.op === 2) {
+      setObsState("connected ✓");
+    } else if (m.op === 5 && m.d.eventType === "CustomEvent" && m.d.eventData && m.d.eventData.app === "enfants-champignons") {
+      handleEvent(m.d.eventData);
+    }
+  };
+  ws.onclose = (e) => {
+    setObsState(e.code === 4009 ? "wrong password" : "not connected (retrying in 5 s)");
+    setTimeout(connectOBS, 5000);
+  };
+}
+
+/* =========================================================
+   Options d'URL et mode test
+   ========================================================= */
+if (params.get("gauge") === "0") gauge.style.display = "none";
+if (params.get("names") === "0") document.querySelectorAll(".kid .name").forEach(n => n.style.display = "none");
+
+// Page de démo : la page qui affiche l'overlay envoie les commandes par postMessage
+addEventListener("message", e => { if (e.data && e.data.app === "enfants-champignons") handleEvent(e.data); });
+
+if (params.has("test")) {
+  document.body.classList.add("test");
+  addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (k === "f") kids.feed("Tester", 25);
+    if (k === "c") kids.cuddle("Tester", 50);
+    if (k === "0") kids.reset();
+    if (/^[1-9]$/.test(k)) { heatTokens = CONFIG.heatMaxTokens * Number(k) / 10; save(); render(); }   // 1-9 = 10-90 %
+    if (k === "+") { addHeat(200); }
+  });
+}
+
+render();
+requestAnimationFrame(() => requestAnimationFrame(() => gauge.classList.add("ready")));
+idleLoop();
+if (params.get("obs") !== "0") connectOBS(); else setObsState("off (demo)");
+</script>
+</body>
+</html>

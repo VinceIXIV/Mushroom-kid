@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Mushroom Kids",
+  "description": "Spots \"Feed the kids\" and \"Cuddle the kids\" tips in Stripchat chat and animates the Mushroom Kids in OBS.",
+  "version": "0.1.0",
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Mushroom Kids", "default_popup": "popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["https://stripchat.com/*", "https://*.stripchat.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

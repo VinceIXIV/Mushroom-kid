@@ -1,0 +1,6 @@
+# Mails de présentation : privés, restent en local
+presentation/email-*.txt
+
+# Fichiers temporaires
+__pycache__/
+*.pyc

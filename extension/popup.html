@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 330px; margin: 0; padding: 12px 14px; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; color: #2b211c; background: #fbf6ef; }
+  h1 { font-size: 15px; margin: 0 0 8px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #8a6f5c; margin: 14px 0 6px; }
+  .status { padding: 6px 8px; border-radius: 6px; background: #eee3d6; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .status.ok { background: #d8f0dc; }
+  .status.err { background: #f8dcdc; }
+  label { display: block; margin: 4px 0; }
+  input[type=text], input[type=password], input[type=number] { box-sizing: border-box; width: 100%; padding: 4px 6px; border: 1px solid #cdbba8; border-radius: 5px; background: #fff; font: inherit; }
+  .row { display: grid; grid-template-columns: 1fr 70px; gap: 6px; align-items: end; }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { font: inherit; padding: 5px 10px; border: 1px solid #b89c84; border-radius: 6px; background: #fff; cursor: pointer; }
+  button.primary { background: #8c6d55; color: #fff; border-color: #8c6d55; }
+  button:hover { filter: brightness(.95); }
+  small { color: #8a6f5c; }
+  ul { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow: auto; }
+  li { padding: 3px 0; border-bottom: 1px solid #eadfd2; display: flex; justify-content: space-between; gap: 8px; }
+  li .a { white-space: nowrap; }
+  #saved { color: #3b8a4a; margin-left: 6px; }
+</style>
+</head>
+<body>
+  <h1>🍄 Mushroom Kids</h1>
+  <div id="status" class="status"><span id="statusText">…</span><button id="reconnect" title="Reconnect to OBS">↻</button></div>
+
+  <h2>Try it</h2>
+  <label>Name shown in the bubble <input type="text" id="testUser" value="Tester"></label>
+  <div class="btns">
+    <button data-sim="feed">🍪 Feed</button>
+    <button data-sim="cuddle">🤗 Cuddle</button>
+    <button data-sim="reset">Reset warmth</button>
+  </div>
+
+  <h2>Triggers</h2>
+  <div class="row"><label>Tip menu item "feed" <input type="text" id="feedLabel"></label><label>price (tk) <input type="number" id="feedAmount" min="0"></label></div>
+  <div class="row"><label>Tip menu item "cuddle" <input type="text" id="cuddleLabel"></label><label>price (tk) <input type="number" id="cuddleAmount" min="0"></label></div>
+  <small>A tip triggers the animation if its message contains the item name, or if its amount is exactly the price set here.</small>
+  <label><input type="checkbox" id="testMode"> Test mode: <b>any tip</b> triggers an animation</label>
+  <label>Room to watch <small>(empty = any room)</small> <input type="text" id="room" placeholder="room name"></label>
+
+  <h2>Warmth gauge</h2>
+  <div class="row"><label>The gauge is full (100%) at</label><label>tokens <input type="number" id="heatMax" min="1"></label></div>
+  <small>Each feed or cuddle tip adds its tokens to the gauge.</small>
+
+  <h2>OBS</h2>
+  <div class="row"><label>WebSocket password <input type="password" id="obsPassword"></label><label>Port <input type="number" id="obsPort"></label></div>
+  <div class="btns" style="margin-top:8px"><button class="primary" id="save">Save</button><span id="saved"></span></div>
+
+  <h2>Diagnostics</h2>
+  <div class="btns"><button id="dump">📋 Copy the HTML of the latest chat messages</button></div>
+  <small id="dumpInfo">Use it in the Stripchat tab, right after a tip menu tip.</small>
+
+  <h2>Latest tips seen</h2>
+  <ul id="log"><li><small>None yet.</small></li></ul>
+
+  <script src="popup.js"></script>
+</body>
+</html>

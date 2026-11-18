@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mushroom Kids</title>
+<meta name="description" content="Two fluffy mushroom kids for a stream overlay: see every mood, then feed and cuddle them live.">
+<!--
+  Page GitHub Pages. Chaque aperçu est le vrai overlay.html (sans OBS), piloté par postMessage.
+  Onglet « All states » : tous les états côte à côte. Onglet « Live example » : on joue soi-même.
+  Lien direct vers l'exemple : …/#live
+-->
+<style>
+  :root {
+    --bg: #1d1724;
+    --panel: #2a2133;
+    --panel-2: #342a3f;
+    --line: #3d3249;
+    --text: #f5eefb;
+    --muted: #b9abc8;
+    --mint: #9fd6c6;
+    --cream: #eadbbd;
+    --pink: #ff8fa3;
+    --stage: radial-gradient(ellipse at 50% 30%, #6b4a6e 0%, #3a2a45 55%, #221a2c 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -.01em; }
+  h2 { margin: 0 0 10px; font-size: 17px; }
+  .lead { margin: 0 0 20px; color: var(--muted); line-height: 1.5; max-width: 680px; }
+
+  /* Onglets */
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+  .tab { font: inherit; font-weight: 600; font-size: 15px; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent;
+         padding: 10px 14px; cursor: pointer; margin-bottom: -1px; }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--mint); }
+  .tab:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; border-radius: 6px; }
+  [role="tabpanel"][hidden] { display: none; }
+
+  /* Un aperçu de l'overlay */
+  .screen { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--stage); }
+  .screen iframe { position: absolute; left: 0; top: 0; width: 480px; height: 360px; border: 0; transform-origin: 0 0; pointer-events: none; }
+
+  /* Onglet 1 : tous les états */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  figcaption { padding: 10px 14px 12px; line-height: 1.45; }
+  figcaption .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  figcaption b { font-size: 15px; }
+  figcaption .range { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  figcaption p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+  .group { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .group:not(:first-child) { margin-top: 28px; }
+
+  /* Onglet 2 : exemple en direct */
+  .live { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 820px) { .live { grid-template-columns: 1fr; } }
+  .live .screen { border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  .card + .card { margin-top: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  input[type=text] { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  input[type=text]:focus { outline: 2px solid var(--mint); outline-offset: 1px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  button.big { font-family: inherit; font-weight: 600; font-size: 16px; line-height: 1.25; color: #2b1d1a; border: 0; border-radius: 12px;
+               padding: 12px 10px; cursor: pointer; transition: transform .1s, filter .15s; }
+  button.big small { display: block; font-weight: 500; font-size: 12px; opacity: .75; margin-top: 2px; }
+  button.big:hover { filter: brightness(1.06); }
+  button.big:active { transform: scale(.97); }
+  .feed { background: var(--cream); }
+  .cuddle { background: var(--mint); }
+  kbd { font: 600 11px/1 "Segoe UI", system-ui, sans-serif; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0,0,0,.25); background: rgba(255,255,255,.55); }
+  .hint { margin: 12px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .hint kbd { color: var(--text); background: var(--panel-2); border-color: var(--line); }
+
+  .readout { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .readout .tokens { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .readout .tokens span { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .readout .mood { font-weight: 700; color: var(--pink); }
+
+  /* Échelle des humeurs, avec un repère sur la chaleur actuelle */
+  .scale { position: relative; display: flex; height: 26px; border-radius: 8px; overflow: hidden; }
+  .scale div { display: grid; place-items: center; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75); border-right: 1px solid var(--bg);
+               background: var(--panel-2); transition: background .3s, color .3s; white-space: nowrap; overflow: hidden; }
+  .scale div:last-child { border-right: 0; }
+  .scale .short { display: none; }
+  @media (max-width: 520px) { .scale .long { display: none; } .scale .short { display: inline; } .scale div { font-size: 10px; } }
+  .scale div.on { background: var(--pink); color: #2b1d1a; }
+  .ticks { position: relative; height: 16px; font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ticks span { position: absolute; top: 2px; transform: translateX(-50%); }
+  .marker { position: relative; height: 10px; }
+  .marker i { position: absolute; top: 0; width: 0; height: 0; border: 6px solid transparent; border-top-color: var(--text); transform: translateX(-50%); transition: left .6s ease; }
+  input[type=range] { width: 100%; accent-color: var(--mint); margin: 14px 0 4px; }
+  .rangeRow { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  button.small { font: inherit; font-size: 13px; color: var(--text); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+  ul.how { margin: 12px 0 0; padding-left: 18px; font-size: 14px; color: var(--muted); line-height: 1.55; }
+  ul.how b { color: var(--text); }
+
+  footer { margin-top: 30px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🍄 Mushroom Kids</h1>
+  <p class="lead">Two fluffy mushroom kids who live at the bottom of the stream. Viewers feed them and cuddle them with the tip menu, and every tip warms them up.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-states" aria-controls="states" aria-selected="true">All states</button>
+    <button class="tab" role="tab" id="tab-live" aria-controls="live" aria-selected="false">Live example</button>
+  </div>
+
+  <!-- ============ Onglet 1 : tous les états ============ -->
+  <section id="states" role="tabpanel" aria-labelledby="tab-states">
+    <p class="group">Tip menu animations</p>
+    <div class="grid" id="gridTips"></div>
+    <p class="group">Moods while waiting, set by the warmth gauge</p>
+    <div class="grid" id="gridMoods"></div>
+  </section>
+
+  <!-- ============ Onglet 2 : exemple en direct ============ -->
+  <section id="live" role="tabpanel" aria-labelledby="tab-live" hidden>
+    <div class="live">
+      <div class="screen" id="liveScreen"></div>
+
+      <div>
+        <div class="card">
+          <label for="user">Tipper name</label>
+          <input type="text" id="user" value="LuckyTipper" maxlength="24" autocomplete="off">
+          <div class="row">
+            <button class="big feed" data-type="feed">🍪 Feed the kids <small>25 tk · <kbd>F</kbd></small></button>
+            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>50 tk · <kbd>C</kbd></small></button>
+          </div>
+          <p class="hint">Press <kbd>F</kbd> or <kbd>C</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn.</p>
+        </div>
+
+        <div class="card">
+          <h2>🌡️ Warmth gauge</h2>
+          <div class="readout">
+            <div class="tokens" id="tokens">0 <span>/ 2000 tokens</span></div>
+            <div><span id="pct">0%</span> · <span class="mood" id="mood">Cold</span></div>
+          </div>
+          <div class="marker"><i id="marker" style="left:0%"></i></div>
+          <div class="scale" id="scale"></div>
+          <div class="ticks" id="ticks"></div>
+
+          <ul class="how">
+            <li>Only <b>Feed</b> and <b>Cuddle</b> tips fill it, with the tokens tipped: <b>+25</b> per feed, <b>+50</b> per cuddle in this example.</li>
+            <li>It is <b>full at 2000 tokens</b>. The streamer chooses this number and the prices.</li>
+            <li>It <b>never goes down</b> by itself. The streamer empties it when she wants, for example at the start of a stream.</li>
+            <li>The warmer they are, the happier they look while waiting. Below 10% they get cold and shiver.</li>
+          </ul>
+
+          <input type="range" id="slider" min="0" max="100" value="45" aria-label="Jump to a warmth level">
+          <div class="rangeRow"><span>Drag to try any warmth level</span><button class="small" id="empty">Empty it</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>On stream, the background is transparent: the kids sit on top of the camera, wherever the streamer places them in OBS. Everything viewers see is in English.</footer>
+</main>
+
+<script>
+const APP = "enfants-champignons";
+const OVERLAY = "overlay.html?obs=0&names=0";
+
+/* Les humeurs : mêmes seuils que CONFIG.moods dans overlay.html */
+const MOODS = [
+  { key: "cold",     name: "Cold",     from: 0,  to: 10,  pct: 0,  text: "They pout and shiver. Time for a tip!" },
+  { key: "neutral",  name: "Neutral",  from: 10, to: 45,  pct: 30, text: "They breathe, blink and play little games together." },
+  { key: "comfy",    name: "Comfy",    from: 45, to: 60,  pct: 52, text: "A wider smile, pinker cheeks and slower, calmer breathing." },
+  { key: "cosy",     name: "Cosy",     from: 60, to: 70,  pct: 65, text: "A little open smile, rosy cheeks and a few sparkles." },
+  { key: "happy",    name: "Happy",    from: 70, to: 90,  pct: 80, text: "Big smiles, a bouncy step, and they play more often." },
+  { key: "blissful", name: "Blissful", short: "Bliss", from: 90, to: 100, pct: 96, text: "Happy ^^ eyes now and then, and little hearts floating up." },
+];
+const TIPS = [
+  { type: "feed",   name: "🍪 Feed the kids",   user: "LuckyTipper", every: 9000, text: "Food drops, they munch, then their cheeks glow. The bubble shows who tipped." },
+  { type: "cuddle", name: "🤗 Cuddle the kids", user: "SweetViewer", every: 8000, text: "They lean in for a hug and hearts float up. The bubble shows who tipped." },
+];
+
+/* Un aperçu = le vrai overlay dans un iframe, mis à l'échelle */
+const previews = [];
+function makePreview(box, onLoad) {
+  const frame = document.createElement("iframe");
+  frame.title = "Mushroom Kids overlay";
+  frame.src = OVERLAY;
+  box.appendChild(frame);
+  previews.push({ box, frame });
+  const send = (msg) => frame.contentWindow.postMessage({ app: APP, ...msg }, "*");
+  frame.addEventListener("load", () => onLoad && onLoad(send));
+  fit();
+  return { frame, send };
+}
+function fit() { previews.forEach(({ box, frame }) => frame.style.transform = `scale(${box.clientWidth / 480})`); }
+new ResizeObserver(fit).observe(document.body);
+
+/* ---------- Onglet 1 : tous les états (chargé à la première ouverture) ---------- */
+let statesBuilt = false;
+function buildStates() {
+  if (statesBuilt) return;
+  statesBuilt = true;
+  const card = (grid, title, range, text) => {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<div class="screen"></div><figcaption><div class="top"><b>${title}</b><span class="range">${range}</span></div><p>${text}</p></figcaption>`;
+    grid.appendChild(fig);
+    return fig.querySelector(".screen");
+  };
+  TIPS.forEach(t => {
+    const box = card(document.getElementById("gridTips"), t.name, `replays every ${t.every / 1000} s`, t.text);
+    makePreview(box, send => {
+      send({ type: "set", pct: 40 });
+      const play = () => send({ type: t.type, user: t.user, amount: 0 });
+      setTimeout(play, 800);
+      setInterval(play, t.every);
+    });
+  });
+  MOODS.forEach(m => {
+    const box = card(document.getElementById("gridMoods"), m.name, m.from === 0 ? `below ${m.to}%` : `${m.from}–${m.to}%`, m.text);
+    makePreview(box, send => send({ type: "set", pct: m.pct }));
+  });
+}
+
+/* ---------- Onglet 2 : exemple en direct ---------- */
+let live = null;
+const PRICES = { feed: 25, cuddle: 50 };
+function buildLive() {
+  if (live) return;
+  live = makePreview(document.getElementById("liveScreen"), send => { send({ type: "reset" }); send({ type: "set", pct: 45 }); });
+}
+function tip(type) {
+  if (!live) return;
+  live.send({ type, user: document.getElementById("user").value.trim() || "Someone", amount: PRICES[type] });
+}
+document.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => tip(b.dataset.type)));
+addEventListener("keydown", e => {
+  if (e.target.matches("input[type=text]") || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.getElementById("live").hidden) return;
+  const k = e.key.toLowerCase();
+  if (k === "f") tip("feed");
+  if (k === "c") tip("cuddle");
+});
+const slider = document.getElementById("slider");
+slider.addEventListener("input", () => live && live.send({ type: "set", pct: Number(slider.value) }));
+document.getElementById("empty").addEventListener("click", () => live && live.send({ type: "reset" }));
+
+// Échelle des humeurs
+const scale = document.getElementById("scale"), ticks = document.getElementById("ticks");
+MOODS.forEach(m => {
+  const seg = document.createElement("div");
+  seg.style.width = (m.to - m.from) + "%";
+  seg.dataset.key = m.key;
+  seg.innerHTML = `<span class="long">${m.name}</span><span class="short">${m.short || m.name}</span>`;
+  seg.title = `${m.name}: ${m.from}–${m.to}%`;
+  scale.appendChild(seg);
+  if (m.from > 0) { const t = document.createElement("span"); t.style.left = m.from + "%"; t.textContent = m.from + "%"; ticks.appendChild(t); }
+});
+
+// L'overlay de l'exemple renvoie son état : compteur, humeur, repère
+addEventListener("message", e => {
+  const d = e.data;
+  if (!live || e.source !== live.frame.contentWindow || !d || d.app !== APP || d.type !== "state") return;
+  document.getElementById("tokens").innerHTML = `${d.tokens} <span>/ ${d.max} tokens</span>`;
+  document.getElementById("pct").textContent = d.pct + "%";
+  const m = MOODS.find(x => x.key === d.mood) || MOODS[1];
+  document.getElementById("mood").textContent = m.name;
+  document.getElementById("marker").style.left = d.pct + "%";
+  scale.querySelectorAll("div").forEach(s => s.classList.toggle("on", s.dataset.key === d.mood));
+  if (document.activeElement !== slider) slider.value = d.pct;
+});
+
+/* ---------- Onglets ---------- */
+const tabs = { states: document.getElementById("tab-states"), live: document.getElementById("tab-live") };
+function show(name) {
+  Object.entries(tabs).forEach(([key, tab]) => {
+    const on = key === name;
+    tab.setAttribute("aria-selected", on);
+    tab.tabIndex = on ? 0 : -1;
+    document.getElementById(key).hidden = !on;
+  });
+  if (name === "states") buildStates(); else buildLive();
+  fit();
+  if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+}
+tabs.states.addEventListener("click", () => show("states"));
+tabs.live.addEventListener("click", () => show("live"));
+document.querySelector(".tabs").addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { const next = tabs.states.getAttribute("aria-selected") === "true" ? "live" : "states"; show(next); tabs[next].focus(); }
+});
+show(location.hash === "#live" ? "live" : "states");
+</script>
+</body>
+</html>
