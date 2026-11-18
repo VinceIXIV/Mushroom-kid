@@ -21,6 +21,9 @@
   li { padding: 3px 0; border-bottom: 1px solid #eadfd2; display: flex; justify-content: space-between; gap: 8px; }
   li .a { white-space: nowrap; }
   #saved { color: #3b8a4a; margin-left: 6px; }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; color: #8a6f5c; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  pre { white-space: pre-wrap; word-break: break-word; font: 11px/1.45 Consolas, monospace; background: #fff; border: 1px solid #eadfd2; border-radius: 6px; padding: 6px 8px; margin: 6px 0 0; }
   .note { margin: 6px 0; padding: 7px 9px; border-radius: 6px; background: #fff3d6; border: 1px solid #ecd39a; color: #5a4320; }
   header { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; }
   header h1 { margin: 0; }
@@ -39,6 +42,7 @@
       <button data-lang="vi" title="Tiếng Việt"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#DA251D"/><polygon fill="#FF0" points="15,4 16.76,9.43 22.47,9.43 17.85,12.79 19.61,18.21 15,14.86 10.39,18.21 12.15,12.79 7.53,9.43 13.24,9.43"/></svg></button>
     </div>
   </header>
+  <p class="note" id="update" hidden></p>
   <div id="status" class="status"><span id="statusText">…</span><button id="reconnect" data-i18n-title="reconnect">↻</button></div>
 
   <h2 data-i18n="tryIt"></h2>
@@ -67,6 +71,12 @@
 
   <h2 data-i18n="latest"></h2>
   <ul id="log"></ul>
+
+  <details id="diagBox">
+    <summary data-i18n="diag"></summary>
+    <small data-i18n="diagHelp"></small>
+    <pre id="diagText"></pre>
+  </details>
 
   <script src="popup.js"></script>
 </body>

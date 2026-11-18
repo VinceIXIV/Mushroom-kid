@@ -2,15 +2,28 @@
   "manifest_version": 3,
   "name": "Mushroom Kids",
   "description": "Spots the mushroom tip menu items (Feed, Cuddle, High five) in the Stripchat chat and animates the mushroom in OBS.",
-  "version": "0.1.0",
-  "permissions": ["storage"],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_title": "Mushroom Kids", "default_popup": "popup.html" },
+  "version": "0.2.0",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Mushroom Kids",
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
-      "matches": ["https://stripchat.com/*", "https://*.stripchat.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "matches": [
+        "https://stripchat.com/*",
+        "https://*.stripchat.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "row": [".message[class*=\"TipMessage\"]", "[data-message-id][class*=\"TipMessage\"]", ".m-bg-tip-v2", ".m-bg-public-tip", "[class*=\"tip-message\"]"],
+  "menu": ["[class*=\"commentTipMenu\"]", "[class*=\"tipMenuLink\"]", "[class*=\"TipMenuLink\"]", "[class*=\"TipMenu\"]", "[class*=\"tip-menu\"]"],
+  "comment": ["[class*=\"TipMessage__commentBody\"]", "[class*=\"commentBody\"]", ".tip-comment", "[class*=\"TipMessage__comment\"]"],
+  "user": [".user-levels-username-text", ".message-username", ".username", "[class*=\"username\"]"],
+  "amount": ["[class*=\"TipMessage__amount\"]", "[class*=\"amountHighlight\"]"],
+  "delay": 400
+}

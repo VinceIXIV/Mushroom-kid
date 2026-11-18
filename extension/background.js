@@ -100,20 +100,52 @@ setInterval(() => {
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 
 function decide(tip, s) {
-  // Item du tip menu : on ne cherche le nom que dans les vrais tips du menu (pas dans un message libre).
-  // Ancien format sans repère « menu » : on cherche dans tout le texte du tip.
-  const where = tip.menu ? norm(tip.comment) : (tip.menu === undefined ? norm(tip.text) : '');
-  for (const a of s.actions) if (a.label && where && where.includes(norm(a.label))) return a;
+  // D'abord dans le nom de l'item du tip menu, puis (filet de sécurité, si l'affichage du chat diffère)
+  // dans tout le texte du tip : il faut de toute façon un vrai tip pour arriver ici.
+  const places = [tip.menu ? norm(tip.comment) : '', norm(tip.text)];
+  for (const where of places) {
+    if (!where) continue;
+    for (const a of s.actions) if (a.label && where.includes(norm(a.label))) return a;
+  }
   return null;
+}
+
+/* ---------------- Repères du chat, réglables à distance (extension/rules.json sur la page GitHub) ---------------- */
+const RULES_URL = 'https://vinceixiv.github.io/Mushroom-kid/extension/rules.json';
+async function refreshRules() {
+  const { rulesAt = 0 } = await chrome.storage.local.get('rulesAt');
+  if (Date.now() - rulesAt < 30 * 60 * 1000) return;   // au plus toutes les 30 min
+  try {
+    const r = await fetch(RULES_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) await chrome.storage.local.set({ rules: await r.json(), rulesAt: Date.now() });
+  } catch (e) { /* hors ligne : on garde les repères connus */ }
+}
+
+/* ---------------- Diagnostic (affiché replié en bas de la popup) ---------------- */
+async function diag(update) {
+  const { diag: d = { tips: 0, last: null, unknown: [], frames: [] } } = await chrome.storage.session.get('diag');
+  update(d);
+  await chrome.storage.session.set({ diag: d });
 }
 
 /* ---------------- Messages (content script et popup) ---------------- */
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   (async () => {
     const s = await getSettings();
-    if (msg.type === 'tip') {
+    if (msg.type === 'hello') {
+      refreshRules();
+      await diag((d) => { d.frames = [...new Set([msg.frame + ' ' + msg.url, ...(d.frames || [])])].slice(0, 4); });
+      reply({ ok: true });
+    } else if (msg.type === 'unknown') {
+      await diag((d) => { d.unknown = [msg.sample, ...(d.unknown || [])].slice(0, 4); });
+      reply({ ok: true });
+    } else if (msg.type === 'tip') {
       // Seuls les tips qui déclenchent une animation sont gardés dans la liste de la popup
       const action = decide(msg, s);
+      await diag((d) => {
+        d.tips = (d.tips || 0) + 1;
+        d.last = { user: msg.user, amount: msg.amount, menu: msg.menu, comment: msg.comment, text: msg.text.slice(0, 120), action: action ? action.id : null };
+      });
       if (action) {
         let sent = false, error = '';
         // la jauge avance du montant réglé dans l'extension pour cet item (pas du montant lu dans le chat)
@@ -141,5 +173,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
 
 chrome.runtime.onInstalled.addListener(async () => {
   const s = await chrome.storage.local.get(null);
-  await chrome.storage.local.set({ ...DEFAULTS, ...s });
+  await chrome.storage.local.set({ ...DEFAULTS, ...s, rulesAt: 0 });
+  refreshRules();
 });
+chrome.runtime.onStartup.addListener(refreshRules);
