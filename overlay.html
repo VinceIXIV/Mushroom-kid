@@ -147,13 +147,11 @@
   .spark { font-size: 16px; animation: spark 1s ease-out forwards; }
   @keyframes spark { from { transform: scale(.3); opacity: 0; } 30% { opacity: 1; } to { transform: translate(var(--dx), -26px) scale(1); opacity: 0; } }
   .heart { font-size: 22px; animation: float 1.5s ease-out forwards; }
-  /* High five : la main, l'onde de choc et le texte */
-  .hand { position: absolute; width: 110px; height: 132px; pointer-events: none; z-index: 10; transform-origin: 40% 60%; opacity: 0; }
-  .hand svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  /* High five : la petite main du champignon (sort à sa droite) et l'onde de choc */
+  .mhand { position: absolute; left: 70%; top: 57%; width: 23%; height: 22%; pointer-events: none; z-index: 2; transform-origin: 40% 100%; transform: scale(0); }
+  .mhand svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
   .impact { width: 24px; height: 24px; border-radius: 50%; border: 4px solid #fff; box-sizing: border-box; z-index: 11; animation: impact .55s ease-out forwards; }
   @keyframes impact { from { transform: scale(.3); opacity: 1; } to { transform: scale(4.5); opacity: 0; } }
-  .pop { font-weight: 800; font-size: 28px; color: #fff; white-space: nowrap; z-index: 11; text-shadow: 0 2px 0 #c2577a, 0 0 8px rgba(0,0,0,.5); animation: pop 1.3s ease-out forwards; }
-  @keyframes pop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 18% { transform: scale(1.15) rotate(-5deg); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(-34px) scale(1) rotate(-5deg); opacity: 0; } }
   .mini  { font-size: 13px; animation: float 1.8s ease-out forwards; }
   @keyframes float { from { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } to { transform: translate(var(--dx), -90px) scale(1.1); opacity: 0; } }
 
@@ -480,17 +478,17 @@ async function playCuddle({ user, amount }) {
 /* =========================================================
    4. High five : un enfant va au point du high five en sautillant, une main arrive, ils tapent
    ========================================================= */
-const HAND_SVG = `<svg viewBox="0 0 100 120" aria-hidden="true">
-  <rect x="30" y="100" width="44" height="26" rx="6" fill="#c2577a" stroke="#3b2620" stroke-width="3"/>
-  <g fill="#ffd8bd" stroke="#3b2620" stroke-width="3" stroke-linejoin="round">
-    <rect x="20" y="14" width="15" height="52" rx="7.5"/>
-    <rect x="37" y="4"  width="15" height="60" rx="7.5"/>
-    <rect x="54" y="8"  width="15" height="56" rx="7.5"/>
-    <rect x="71" y="20" width="13" height="46" rx="6.5"/>
-    <rect x="3" y="48" width="15" height="40" rx="7.5" transform="rotate(-38 10 68)"/>
-    <path d="M17 54 Q17 46 26 48 L80 50 Q87 50 86 58 L84 90 Q82 112 52 112 Q22 112 19 90 Z"/>
+// Petite main de champignon (moufle avec 3 doigts, pouce et coussinet rose), même couleur que le pied
+const MINI_HAND_SVG = `<svg viewBox="0 0 40 48" aria-hidden="true">
+  <g fill="#f8eee0" stroke="#c9ad93" stroke-width="1.6">
+    <rect x="15" y="34" width="11" height="14" rx="5"/>
+    <ellipse cx="6.5" cy="26" rx="4.2" ry="7" transform="rotate(-28 6.5 26)"/>
+    <ellipse cx="12.5" cy="11" rx="4.8" ry="8"/>
+    <ellipse cx="20.5" cy="8.5" rx="4.8" ry="8.5"/>
+    <ellipse cx="28.5" cy="11.5" rx="4.6" ry="7.6"/>
+    <rect x="7" y="11" width="27" height="28" rx="12"/>
   </g>
-  <path d="M38 76 Q52 84 66 76" stroke="#e3a98a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="20.5" cy="26" rx="6" ry="5" fill="#ffc2cc"/>
 </svg>`;
 
 // Trajet en petits sauts de (x0,y0) à (x1,y1) : décalages en px par rapport à la place de l'enfant
@@ -527,53 +525,52 @@ async function playHighFive({ user, amount, kid }) {
   showBubble("highfive", user, CONFIG.kids[i].name);
   const r = el.getBoundingClientRect();
   const spot = highFiveSpot();
-  // l'enfant se pose centré sur le point, un peu à gauche pour laisser la place à la main
-  const dx = spot.x - 40 - (r.left + r.width / 2), dy = spot.y + r.height / 2 - r.bottom;
+  // l'enfant se pose centré sur le point
+  const dx = spot.x - (r.left + r.width / 2), dy = spot.y + r.height / 2 - r.bottom;
   const dir = dx >= 0 ? "look-r" : "look-l";
   kidEls.forEach(o => o.classList.add(o === el ? dir : (o.getBoundingClientRect().left < spot.x ? "look-r" : "look-l")));
   el.style.zIndex = 9;
   await wait(300);
   await hopTravel(el, 0, 0, dx, dy);
 
-  // la main arrive de la droite, à hauteur du chapeau
+  // sa petite main sort à côté de lui…
   el.classList.remove("look-l"); el.classList.add("look-r");
-  const k = el.getBoundingClientRect();
   const hand = document.createElement("div");
-  hand.className = "hand";
-  hand.innerHTML = HAND_SVG;
-  hand.style.left = (k.right - 18) + "px";
-  hand.style.top = (k.top + k.height * .05) + "px";
-  document.body.appendChild(hand);
+  hand.className = "mhand";
+  hand.innerHTML = MINI_HAND_SVG;
+  el.appendChild(hand);
   await hand.animate([
-    { transform: "translate(260px,-90px) rotate(25deg)", opacity: 0 },
-    { transform: "translate(0,0) rotate(-12deg)", opacity: 1 },
-  ], { duration: 480, easing: "cubic-bezier(.2,.8,.3,1)", fill: "forwards" }).finished;
-  await wait(150);
-
-  // il saute dans la main : clap !
-  const base = `translate(${dx}px, ${dy}px)`;
-  el.animate([
-    { transform: `${base} scale(1.05,.92)` },
-    { transform: `${base} translate(10px,-30px) rotate(10deg)`, offset: .45 },
-    { transform: `${base} translate(10px,-30px) rotate(10deg)`, offset: .6 },
-    { transform: base },
-  ], { duration: 520, easing: "ease-out" });
-  await wait(230);
-  const c = { x: k.right - 6, y: k.top + k.height * .22 };
+    { transform: "translate(-8px, 18px) scale(0) rotate(35deg)" },
+    { transform: "translate(0, -6px) scale(1.15) rotate(-14deg)", offset: .7 },
+    { transform: "translate(0, -2px) scale(1) rotate(-6deg)" },
+  ], { duration: 520, easing: "ease-out", fill: "forwards" }).finished;
+  await wait(250);
+  // … il la tend vers la caméra pour taper dans la main de la streameuse : clap !
+  await hand.animate([
+    { transform: "translate(0, -2px) scale(1) rotate(-6deg)" },
+    { transform: "translate(3px, -8px) scale(1.5) rotate(0deg)" },
+  ], { duration: 360, easing: "ease-in", fill: "forwards" }).finished;
+  const hr = hand.getBoundingClientRect();
+  const c = { x: hr.left + hr.width / 2, y: hr.top + hr.height / 2 };
   spawn("impact", "", c.x - 12, c.y - 12);
-  spawn("pop", "High five!", c.x - 70, c.y - 70);
   for (let s = 0; s < 6; s++) spawn("spark", "✨", c.x - 8 + (Math.random() - .5) * 50, c.y - 10 + (Math.random() - .5) * 40, (Math.random() - .5) * 40);
   hand.animate([
-    { transform: "translate(0,0) rotate(-12deg)", opacity: 1 },
-    { transform: "translate(-10px,4px) rotate(-18deg)", opacity: 1, offset: .2 },
-    { transform: "translate(24px,-8px) rotate(-6deg)", opacity: 1, offset: .5 },
-    { transform: "translate(280px,-110px) rotate(20deg)", opacity: 0 },
-  ], { duration: 900, easing: "ease-in", fill: "forwards" }).finished.then(() => hand.remove());
+    { transform: "translate(3px, -8px) scale(1.5) rotate(0deg)" },
+    { transform: "translate(5px, -4px) scale(1.25) rotate(8deg)", offset: .25 },
+    { transform: "translate(2px, -6px) scale(1.3) rotate(-10deg)", offset: .55 },
+    { transform: "translate(2px, -6px) scale(1.3) rotate(6deg)", offset: .8 },
+    { transform: "translate(0, -2px) scale(1.1) rotate(0deg)" },
+  ], { duration: 900, easing: "ease-in-out", fill: "forwards" });
   addHeat(amount);
   el.classList.add("content");
   await wait(320);
   for (let t = 0; t < 3; t++) { cheekSparks(el); await wait(450); }
   el.classList.remove("content");
+  await hand.animate([
+    { transform: "translate(0, -2px) scale(1.1) rotate(0deg)" },
+    { transform: "translate(-8px, 18px) scale(0) rotate(35deg)" },
+  ], { duration: 300, easing: "ease-in", fill: "forwards" }).finished;
+  hand.remove();
 
   // retour à sa place
   el.classList.remove("look-r"); el.classList.add(dx >= 0 ? "look-l" : "look-r");
