@@ -178,7 +178,7 @@
           <div class="row">
             <button class="big feed" data-type="feed">🍪 Feed the kid <small>25 tk · <kbd>F</kbd></small></button>
             <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kid <small>50 tk · <kbd>C</kbd></small></button>
-            <button class="big hf" data-type="highfive">✋ High five <small>40 tk · <kbd>H</kbd></small></button>
+            <button class="big hf" data-type="highfive">✋ High five kid <small>40 tk · <kbd>H</kbd></small></button>
           </div>
           <p class="hint"><span data-l="vi">Bấm phím <kbd>F</kbd>, <kbd>C</kbd> hoặc <kbd>H</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy tới chỗ bạn để đập tay, rồi tiến lại gần camera.</span><span data-l="en">Press <kbd>F</kbd>, <kbd>C</kbd> or <kbd>H</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn. This frame is like the whole stream screen: the mushroom hops over to you for the high five, then comes towards the camera.</span></p>
         </div>
@@ -335,11 +335,11 @@
       <!-- 6 -->
       <div class="card">
         <h2><span class="num">6</span> <span data-l="vi">Thêm các món vào tip menu Stripchat</span><span data-l="en">Add the items to your Stripchat tip menu</span></h2>
-        <p><span data-l="vi">Thêm các món này vào tip menu của bạn, với giá bạn muốn:</span><span data-l="en">Add these items to your tip menu, at the price you want:</span></p>
+        <p><span data-l="vi">Thêm các món này vào tip menu của bạn, với giá bạn muốn. Đây chỉ là tên gợi ý: bạn có thể đặt <b>tên nào cũng được</b> (ví dụ thêm emoji 🔮, hoặc tên theo phong cách của bạn), miễn là <b>tên trong tiện ích giống y như vậy</b>.</span><span data-l="en">Add these items to your tip menu, at the price you want. These names are only suggestions: you can use <b>any names you like</b> (with an emoji 🔮, or in your own style), as long as <b>the names in the extension are exactly the same</b>.</span></p>
         <table>
           <tr><td>Feed the kid</td><td><span data-l="vi">bé ăn</span><span data-l="en">the mushroom eats</span> 🍪</td></tr>
           <tr><td>Cuddle the kid</td><td><span data-l="vi">bé tự ôm mình</span><span data-l="en">the mushroom hugs itself</span> 🤗</td></tr>
-          <tr><td>High five</td><td><span data-l="vi">bé đập tay với bạn, rồi với viewer</span><span data-l="en">the mushroom high-fives you, then the viewers</span> ✋</td></tr>
+          <tr><td>High five kid</td><td><span data-l="vi">bé đập tay với bạn, rồi với viewer</span><span data-l="en">the mushroom high-fives you, then the viewers</span> ✋</td></tr>
         </table>
         <div class="warn">⚠️ <span data-l="vi"><b>Tên món trong tip menu phải giống tên trong tiện ích</b> (phần <b>Tip menu</b> trong tiện ích). Bạn có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Nếu bạn đổi tên một món, hãy đổi giống vậy trong tiện ích rồi bấm <b>Lưu</b>.</span><span data-l="en"><b>The item names in your tip menu must match the names in the extension</b> (its <b>Tip menu</b> section). You can add emojis around the name, and capitals don’t matter. If you rename an item, rename it the same way in the extension and click <b>Save</b>.</span></div>
         <p><span data-l="vi">Trong tiện ích, ở ô <b>giá (tk)</b> cạnh mỗi món, hãy điền <b>đúng giá của món đó trong tip menu</b>. Mỗi lần món được tip, số token này được cộng vào <b>thanh độ ấm</b> của bé. Thanh đầy khi đạt <b>2000 token</b> (bạn có thể đổi con số này trong tiện ích, phần <b>Thanh độ ấm</b>), và trên stream thanh hiện phần trăm. Nhớ bấm <b>Lưu</b>.</span><span data-l="en">In the extension, in the <b>price (tk)</b> box next to each item, enter <b>that item’s price in your tip menu</b>. Each time the item is tipped, this many tokens are added to the mushroom’s <b>warmth gauge</b>. The gauge is full at <b>2000 tokens</b> (you can change this number in the extension, <b>Warmth gauge</b> section), and on stream it shows a percentage. Remember to click <b>Save</b>.</span></p>
@@ -407,7 +407,7 @@ const MOODS = [
 const TIPS = [
   { type: "feed",   name: "🍪 Feed the kid",   user: "LuckyTipper", every: 9000, text: { vi: "Đồ ăn rơi xuống, bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip.", en: "Food drops, it munches, then its cheeks glow. The bubble shows who tipped." } },
   { type: "cuddle", name: "🤗 Cuddle the kid", user: "SweetViewer", every: 8000, text: { vi: "Bé dùng hai bàn tay nhỏ ôm lấy mình, má ửng hồng và tim bay lên. Bong bóng hiện tên người tip.", en: "It hugs itself with its two little hands, its cheeks glow and hearts float up. The bubble shows who tipped." } },
-  { type: "highfive", name: "✋ High five", user: "HappyFan", every: 14000, wide: true,
+  { type: "highfive", name: "✋ High five kid", user: "HappyFan", every: 14000, wide: true,
     text: { vi: "Bé nhảy lò cò tới chỗ bạn, quay về phía bạn và giơ bàn tay nhỏ để đập tay với bạn. Rồi bé tiến lại gần camera, to dần lên, đập tay với viewer, và nhảy về chỗ cũ.",
             en: "It hops over to you, turns to you and raises its little hand for your high five. Then it comes closer to the camera, growing bigger, high-fives the viewers, and hops back home." } },
 ];
