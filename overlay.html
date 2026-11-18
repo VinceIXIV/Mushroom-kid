@@ -554,11 +554,17 @@ async function hopTravel(el, x0, y0, x1, y1, z0 = 1, z1 = 1) {
   anim.cancel();
 }
 
-// Point de l'écran en px, depuis ?nom=x,y (en %) ou la valeur par défaut
+// Point de l'écran en px, depuis ?nom=x,y (en %) ou la valeur par défaut.
+// Champignon placé à droite (?home=1,…) : le trajet par défaut est mis en miroir, côté droit.
+function homeOnRight() {
+  const h = (params.get("home") || "").split(",").map(Number);
+  return h.length === 2 && h.every(Number.isFinite) && h[0] > .5;
+}
 function screenPoint(name, def) {
   const p = (params.get(name) || "").split(",").map(Number);
   const ok = p.length === 2 && p.every(Number.isFinite);
-  return { x: innerWidth * (ok ? p[0] : def.x) / 100, y: innerHeight * (ok ? p[1] : def.y) / 100 };
+  const x = ok ? p[0] : (homeOnRight() ? 100 - def.x : def.x);
+  return { x: innerWidth * x / 100, y: innerHeight * (ok ? p[1] : def.y) / 100 };
 }
 const highFiveSpot = () => screenPoint("hf", CONFIG.highFiveAt);
 const frontSpot = () => screenPoint("front", CONFIG.frontAt);
