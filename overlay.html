@@ -77,8 +77,10 @@
   .look-r .look { transform: translateX(3.5px); }
   /* Tête tournée (trajet, high five) : tout le visage glisse de côté, de trois quarts */
   .face { transition: transform .35s ease-out; }
-  .turn-r .face { transform: translateX(10px) scaleX(.92); transform-origin: 75px 145px; }
-  .turn-l .face { transform: translateX(-10px) scaleX(.92); transform-origin: 75px 145px; }
+  .turn-r .face { transform: translateX(15px) scaleX(.82); transform-origin: 75px 145px; }
+  .turn-l .face { transform: translateX(-15px) scaleX(.82); transform-origin: 75px 145px; }
+  .turn-r .pose { transform: rotate(5deg); }   /* il se penche un peu vers où il regarde */
+  .turn-l .pose { transform: rotate(-5deg); }
   .hop .pose    { animation: hop .5s cubic-bezier(.3,.7,.4,1) 2; }
   .shy .cheek   { opacity: .9; transform: scale(1.25); }
   @keyframes hop { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-22px); } }
