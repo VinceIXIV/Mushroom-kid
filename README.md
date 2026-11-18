@@ -3,7 +3,7 @@
 Two fluffy mushroom kids for a stream overlay. Viewers feed them and cuddle them through the tip menu, and every tip fills their warmth gauge.
 
 **Preview:** https://vinceixiv.github.io/Mushroom-kid/
-It has two tabs: *All states* and *Live example*.
+It has two tabs, with explanations in Vietnamese: all the states side by side, and a live example.
 
 ## What's inside
 

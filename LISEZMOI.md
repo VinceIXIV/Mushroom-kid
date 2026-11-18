@@ -12,8 +12,8 @@ Le signal passe par le serveur WebSocket intégré à OBS. Tout reste sur le PC.
 Pour la présentation :
 
 - `index.html` : la page de présentation (GitHub Pages), en anglais, avec deux onglets :
-  - **All states** : feed, cuddle et les 6 humeurs côte à côte, en mouvement ;
-  - **Live example** : on tipe soi-même (boutons ou touches F et C), avec le compteur de la jauge et l'échelle des humeurs.
+  - **Tất cả trạng thái** (tous les états) : feed, cuddle et les 6 humeurs côte à côte, en mouvement ;
+  - **Thử trực tiếp** (essai en direct) : on tipe soi-même (boutons ou touches F et C), avec le compteur de la jauge et l'échelle des humeurs.
   
   Chaque aperçu est le vrai `overlay.html`, sans OBS. Ouverte en local (double-clic), elle sert aussi de page de test.
 - `presentation/` : les 4 GIF et le mail en vietnamien (`email-vi.txt`). Sa traduction en français, avec la marche à suivre pour insérer les GIF dans Gmail, est dans `email-fr.txt`. Les deux mails restent en local : ils sont exclus du repo par `.gitignore`.
@@ -89,7 +89,7 @@ Après le test, **décocher le Test mode**. En vrai, seuls ces tips déclenchent
 
 ## Tester l'overlay sans OBS
 
-Le plus simple : ouvrir `index.html` (double-clic). L'onglet *All states* montre tout en même temps, et l'onglet *Live example* permet de jouer.
+Le plus simple : ouvrir `index.html` (double-clic). L'onglet *Tất cả trạng thái* montre tout en même temps, et l'onglet *Thử trực tiếp* permet de jouer.
 
 Pour l'overlay seul, ouvrir `overlay.html?test=1&obs=0` dans Chrome. Retirer `&obs=0` pour tester aussi la connexion à OBS. Les touches sont :
 
