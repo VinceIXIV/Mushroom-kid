@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mushroom Kids",
-  "description": "Spots \"Feed the kids\" and \"Cuddle the kids\" tips in Stripchat chat and animates the Mushroom Kids in OBS.",
+  "description": "Spots the mushroom tip menu items (Feed, Cuddle, High five) in the Stripchat chat and animates the mushroom in OBS.",
   "version": "0.1.0",
   "permissions": ["storage"],
   "background": { "service_worker": "background.js" },

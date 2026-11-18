@@ -6,13 +6,12 @@ const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
   heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
-  // id : identifiant du réglage ; kid : quel enfant fait le high five (0 = 1er, chapeau crème ; 1 = 2e, chapeau vert d'eau)
+  // id : identifiant du réglage (un seul champignon)
   actions: [
     // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
-    { id: 'feed',   type: 'feed',     label: 'Feed the kids',   amount: 25 },
-    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kids', amount: 50 },
-    { id: 'hf0',    type: 'highfive', kid: 0, label: 'Bibi high five',  amount: 40 },
-    { id: 'hf1',    type: 'highfive', kid: 1, label: 'Pouic high five', amount: 40 },
+    { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
+    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
+    { id: 'hf0',    type: 'highfive', label: 'High five',      amount: 40 },
   ],
 };
 const APP = 'enfants-champignons';

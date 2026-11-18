@@ -5,9 +5,9 @@
 <title>Mushroom Kids</title>
 <!--
   Overlay OBS « les enfants » : source Navigateur 1920 x 1080 (plein écran), fond transparent.
-  Les enfants et la jauge sont dans un bloc de 480 x 360 placé dans un coin (?home=).
-  Pour le high five, l'enfant sort du bloc et va en sautillant jusqu'à un point de l'écran (?hf=).
-  (En 480 x 360, tout marche aussi, le trajet du high five est juste plus court.)
+  Un seul champignon (chapeau marron, comme la peluche). Lui et la jauge sont dans un bloc placé dans un coin (?home=).
+  High five : il sautille jusqu'à la streameuse (?hf=), tourné vers elle (?me=), tape dans sa main,
+  puis s'avance vers la caméra en grossissant (?front=), tape dans la main des viewers et rentre à sa place.
 
   Les animations sont déclenchées par l'extension « Les enfants champignons » via le serveur WebSocket d'OBS.
   Mot de passe WebSocket : à mettre dans CONFIG.obsPassword ci-dessous, ou dans l'URL : overlay.html?pw=xxxx
@@ -19,16 +19,17 @@
     ?names=0    cache les noms des enfants
     ?obs=0      pas de connexion à OBS (page de démo : commandes reçues par postMessage)
     ?home=0,1   position du bloc des enfants : x,y de 0 à 1 (0,1 = en bas à gauche ; 1,1 = en bas à droite)
-    ?me=50,40   où est la streameuse à l'écran, en % (les enfants se tournent vers elle pour le high five)
-    ?hf=36,62   point du high five, en % de l'écran (à côté d'elle)
+    ?me=50,40   où est la streameuse à l'écran, en % (il se tourne vers elle pour le high five)
+    ?hf=20,60   où il pose les pieds pour taper dans sa main, en % de l'écran (à côté de ses mains)
+    ?front=39,97  où il pose les pieds pour le high five aux viewers (devant, en grand)
     ?test=1    fond bleu, état de la connexion et touches de test (pour un navigateur, pas pour OBS)
-                F = feed · C = cuddle · H / J = high five du 1er / 2e enfant · 0-9 = jauge · + = +200 tokens
+                F = feed · C = cuddle · H = high five · 0-9 = jauge · + = +200 tokens
 
   États :
    1. repos   : ils respirent, clignent des yeux et font de temps en temps un petit truc entre eux
    2. feed    : la nourriture tombe, ils mâchent, puis joues roses (bulle avec le pseudo du tipeur)
    3. cuddle  : ils se serrent l'un contre l'autre, joues roses, cœurs (bulle avec le pseudo)
-   4. high five : un enfant va en sautillant jusqu'au point du high five, une main arrive, ils tapent, il revient
+   4. high five : il va voir la streameuse, tape dans sa main, s'avance vers la caméra, tape dans la main des viewers, revient
    La bulle disparaît dès qu'ils retournent à la boucle de repos.
 -->
 <style>
@@ -42,12 +43,12 @@
   body.test { background: #5a6b7d; }
 
   /* Le bloc des enfants (480 x 360) dans l'écran : --hx, --hy de 0 à 1 */
-  #home { position: absolute; width: 480px; height: 360px; --hx: 0; --hy: 1;
-          left: calc(var(--hx) * (100% - 480px)); top: calc(var(--hy) * (100% - 360px)); }
+  #home { position: absolute; width: 300px; height: 330px; --hx: 0; --hy: 1;
+          left: calc(var(--hx) * (100% - 300px)); top: calc(var(--hy) * (100% - 330px)); }
   #stage { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 28px; padding-bottom: 12px; }
 
   /* Jauge de chaleur */
-  #gauge { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: 420px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; background: var(--bar-bg); border-radius: 999px; padding: 6px 14px; color: #fff; font-weight: 700; font-size: 18px; text-shadow: 0 1px 2px #000; z-index: 5; }
+  #gauge { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: 270px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; background: var(--bar-bg); border-radius: 999px; padding: 6px 14px; color: #fff; font-weight: 700; font-size: 18px; text-shadow: 0 1px 2px #000; z-index: 5; }
   #gauge .track { flex: 1; height: 14px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
   #gauge .fill { height: 100%; width: 0; border-radius: 999px; background: var(--heat); background-size: 300px 100%; }
   #gauge.ready .fill { transition: width 1.2s ease; }   /* pas d'animation au chargement */
@@ -56,7 +57,7 @@
   #gauge.hot { box-shadow: 0 0 14px rgba(255, 120, 60, .55); }
 
   /* ---------- Un enfant ---------- */
-  .kid { position: relative; width: 150px; height: 190px; margin-bottom: 78px; }
+  .kid { position: relative; width: 150px; height: 190px; margin-bottom: 60px; transform-origin: 50% 100%; }
   .kid svg { width: 100%; height: 100%; overflow: visible; }
   .kid .name { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; color: #fff; font-weight: 700; font-size: 17px; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.6); }
 
@@ -159,15 +160,16 @@
   .mhand svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
   .mhand.left { left: auto; right: 70%; transform-origin: 60% 100%; }
   .mhand.left svg { transform: scaleX(-1); }
+  .mhand.hug { top: 52%; }   /* câlin : les deux petites mains serrent le pied */
   .impact { width: 24px; height: 24px; border-radius: 50%; border: 4px solid #fff; box-sizing: border-box; z-index: 11; animation: impact .55s ease-out forwards; }
   @keyframes impact { from { transform: scale(.3); opacity: 1; } to { transform: scale(4.5); opacity: 0; } }
   .mini  { font-size: 13px; animation: float 1.8s ease-out forwards; }
   @keyframes float { from { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } to { transform: translate(var(--dx), -90px) scale(1.1); opacity: 0; } }
 
   /* Bulle de dialogue avec le pseudo du tipeur */
-  #bubble { position: absolute; left: 50%; top: 12px; transform: translateX(-50%) scale(.6); opacity: 0; width: max-content; max-width: 92%; box-sizing: border-box; background: #fff; color: var(--ink); font-weight: 700; font-size: 17px; padding: 7px 16px; border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: opacity .25s, transform .25s cubic-bezier(.3,1.5,.6,1); text-align: center; z-index: 6; }
+  #bubble { position: absolute; left: 50%; top: 12px; transform: translateX(-50%) scale(.6); opacity: 0; width: max-content; max-width: 420px; box-sizing: border-box; background: #fff; color: var(--ink); font-weight: 700; font-size: 17px; padding: 7px 16px; border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: opacity .25s, transform .25s cubic-bezier(.3,1.5,.6,1); text-align: center; z-index: 6; }
   #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
-  #bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-bottom: 0; border-top-color: #fff; }
+  #bubble::after { content: ""; position: absolute; left: var(--tail, 50%); bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-bottom: 0; border-top-color: #fff; }
   #bubble b { color: #c2577a; }
 
   #help { position: absolute; top: 0; left: 0; right: 0; color: #fff; font: 11px/1.5 "Segoe UI", system-ui, sans-serif; background: rgba(0,0,0,.5); padding: 3px 8px; white-space: nowrap; overflow: hidden; display: none; z-index: 7; }
@@ -176,7 +178,7 @@
 </style>
 </head>
 <body>
-<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · <b>H</b> / <b>J</b> high five (1st / 2nd kid) · OBS: <span id="obsState">…</span><br>
+<div id="help"><b>F</b> Feed the kids (+25 tk) · <b>C</b> Cuddle the kids (+50 tk) · <b>H</b> High five (+40 tk) · OBS: <span id="obsState">…</span><br>
 Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
 <div id="home">
   <div id="bubble"></div>
@@ -190,23 +192,24 @@ Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>
    ========================================================= */
 const CONFIG = {
   kids: [
-    { name: "Bibi",  cap: "#eadbbd", size: 1.0 },   // chapeau crème clair
-    { name: "Pouic", cap: "#9fd6c6", size: 0.88 },  // chapeau vert d'eau
+    { name: "", cap: "#a27b5c", size: 1.1 },   // un seul champignon, chapeau marron comme la peluche (name : affiché dessous si rempli)
   ],
-  heatMaxTokens: 2000,   // jauge pleine après 2000 tokens de feed + cuddle cumulés
-  coldBelow: 10,         // en dessous de 10 % : ils ont froid et frissonnent
+  heatMaxTokens: 2000,   // jauge pleine après 2000 tokens (réglable dans l'extension)
+  coldBelow: 10,         // en dessous de 10 % : il a froid et frissonne
   hotAbove: 80,          // au-dessus de 80 % : la jauge rougeoie
   moods: [45, 60, 70, 90],   // paliers de joie au repos : comfy dès 45 %, cosy dès 60 %, happy dès 70 %, blissful dès 90 %
   obsPassword: "",       // mot de passe du serveur WebSocket d'OBS (ou ?pw= dans l'URL)
   obsPort: 4455,
   idleEverySec: [6, 12],
   foods: ["🍪", "🍓", "🧁", "🍩", "🍬"],
-  streamerAt: { x: 50, y: 40 },   // où est la streameuse à l'écran, en % (ou ?me=50,40) : les enfants se tournent vers elle
-  highFiveAt: { x: 36, y: 62 },   // où l'enfant vient taper dans sa main, en % (ou ?hf=36,62)
+  streamerAt: { x: 50, y: 40 },   // où est la streameuse à l'écran, en % (ou ?me=50,40) : il se tourne vers elle
+  highFiveAt: { x: 20, y: 60 },   // où il pose les pieds pour taper dans sa main, en % (ou ?hf=20,60)
+  frontAt:    { x: 39, y: 97 },   // où il pose les pieds pour taper dans la main des viewers (ou ?front=39,97)
+  frontSize:  .38,                // sa taille devant la caméra, en part de la hauteur de l'écran
   bubbles: {
-    feed:     "<b>{user}</b> fed the kids 🍪",
-    cuddle:   "<b>{user}</b> cuddled the kids 💕",
-    highfive: "<b>{user}</b> high-fived {kid} ✋",
+    feed:     "<b>{user}</b> fed the kid 🍪",
+    cuddle:   "<b>{user}</b> cuddled the kid 💕",
+    highfive: "<b>{user}</b> high-fived the kid ✋",
   },
 };
 
@@ -263,12 +266,12 @@ function kidSVG(k, i) {
       <path class="mouth-arc" d="M68.5 151.5 Q75 158.5 81.5 151.5" stroke="var(--ink)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
       <path class="mouth-grin-s" d="M69.5 151.5 Q75 151.5 80.5 151.5 Q79 157 75 157 Q71 157 69.5 151.5 Z" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
       <path class="mouth-grin"d="M68 151 Q75 151 82 151 Q80 160 75 160 Q70 160 68 151 Z" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
-      <path class="mouth-sad"d="M69 158 Q75 152 81 158" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path class="mouth-sad" d="M69 158 Q75 152 81 158" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
       <ellipse class="mouth-open" cx="75" cy="156" rx="6" ry="6" fill="#7a3b3b" stroke="var(--ink)" stroke-width="2"/>
       </g>
     </g></g>
   </svg>
-  <div class="name">${k.name}</div>`;
+  ${k.name ? `<div class="name">${k.name}</div>` : ""}`;
 }
 
 const stage = document.getElementById("stage");
@@ -349,13 +352,17 @@ function at(el, fx, fy) {
 const bubble = document.getElementById("bubble");
 const help = document.getElementById("help");
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-function showBubble(kind, user, kidName) {
-  bubble.innerHTML = CONFIG.bubbles[kind].replace("{user}", escapeHtml(user || "Someone")).replace("{kid}", escapeHtml(kidName || ""));
-  // juste au-dessus du chapeau le plus haut (la pointe de la bulle dépasse de 10 px en dessous)
-  const capTop = Math.min(...kidEls.map(el => el.getBoundingClientRect().top));
+function showBubble(kind, user) {
+  bubble.innerHTML = CONFIG.bubbles[kind].replace("{user}", escapeHtml(user || "Someone"));
+  // juste au-dessus de son chapeau (la pointe de la bulle dépasse de 10 px en dessous), sans sortir de l'écran
+  const k = kidEls[0].getBoundingClientRect();
+  const home = document.getElementById("home").getBoundingClientRect();
   const minTop = help.offsetParent ? help.offsetHeight + 4 : 4;   // en mode test, sous l'aide
-  const homeTop = document.getElementById("home").getBoundingClientRect().top;
-  bubble.style.top = (Math.max(minTop, capTop - bubble.offsetHeight - 14) - homeTop) + "px";
+  bubble.style.top = (Math.max(minTop, k.top - bubble.offsetHeight - 14) - home.top) + "px";
+  const w = bubble.offsetWidth, cx = k.left + k.width / 2;
+  const left = Math.max(8, Math.min(innerWidth - w - 8, cx - w / 2));
+  bubble.style.left = (left - home.left + w / 2) + "px";
+  bubble.style.setProperty("--tail", (cx - left) + "px");
   bubble.classList.add("show");
 }
 function hideBubble() { bubble.classList.remove("show"); }
@@ -371,46 +378,39 @@ function cheekSparks(only) {
 /* =========================================================
    1. Repos : petites scènes entre eux
    ========================================================= */
-function neighbours() {
-  const i = Math.floor(Math.random() * (kidEls.length - 1));
-  return [kidEls[i], kidEls[i + 1]];
-}
 const IDLE_SCENES = [
-  async () => { const [a, b] = neighbours(); a.classList.add("look-r"); b.classList.add("look-l"); await wait(2200); },
-  async () => {
-    const [a, b] = neighbours();
-    a.classList.add("look-r"); b.classList.add("look-l");
-    await wait(500);
-    a.classList.add("lean-r", "shy"); b.classList.add("lean-l", "shy");
-    await wait(1600);
+  async () => {   // il regarde autour de lui
+    const el = kidEls[0];
+    turn(el, "l"); await wait(1300);
+    turn(el, "r"); await wait(1300);
+    turn(el, "");
   },
-  async () => {
-    const j = Math.floor(Math.random() * kidEls.length);
-    kidEls.forEach((el, k) => { if (k < j) el.classList.add("look-r"); if (k > j) el.classList.add("look-l"); });
-    await wait(400);
-    kidEls[j].classList.add("hop");
+  async () => {   // petit saut sur place
+    kidEls[0].classList.add("hop");
     await wait(1400);
   },
-  async () => {
-    kidEls.forEach(el => el.classList.add("look-l"));
-    await wait(1200);
-    kidEls.forEach(el => { el.classList.remove("look-l"); el.classList.add("look-r"); });
-    await wait(1200);
+  async () => {   // il rougit, un peu timide
+    const el = kidEls[0];
+    el.classList.add(pick(["lean-l", "lean-r"]), "shy");
+    await wait(1800);
+  },
+  async () => {   // il jette un œil de côté
+    const el = kidEls[0], side = pick(["l", "r"]);
+    el.classList.add("look-" + side); await wait(1500);
   },
 ];
 
-// Scènes en plus quand ils sont heureux (happy et blissful)
+// Scènes en plus quand il est heureux (happy et blissful)
 const HAPPY_SCENES = [
-  async () => {   // petit saut ensemble
-    kidEls.forEach((el, k) => el.classList.add(k === 0 ? "look-r" : "look-l"));
-    await wait(400);
-    kidEls.forEach(el => el.classList.add("hop"));
+  async () => {   // deux petits sauts de joie
+    kidEls[0].classList.add("hop");
     await wait(1400);
   },
-  async () => {   // ils rayonnent : yeux ^^, joues qui brillent
-    kidEls.forEach(el => el.classList.add("content"));
-    cheekSparks(); await wait(800); cheekSparks(); await wait(800);
-    kidEls.forEach(el => el.classList.remove("content"));
+  async () => {   // il rayonne : yeux ^^, joues qui brillent
+    const el = kidEls[0];
+    el.classList.add("content");
+    cheekSparks(el); await wait(800); cheekSparks(el); await wait(800);
+    el.classList.remove("content");
   },
 ];
 
@@ -469,20 +469,34 @@ async function playFeed({ user, amount }) {
 
 async function playCuddle({ user, amount }) {
   showBubble("cuddle", user);
-  const first = kidEls[0], last = kidEls[kidEls.length - 1];
-  first.classList.add("look-r"); last.classList.add("look-l");
-  await wait(400);
-  first.classList.add("lean-r"); last.classList.add("lean-l");
-  kidEls.forEach(el => el.classList.add("cuddle"));
+  const el = kidEls[0];
+  el.classList.add("cuddle");
+  // ses deux petites mains viennent serrer son pied
+  const hands = [false, true].map(left => {
+    const h = document.createElement("div");
+    h.className = "mhand hug" + (left ? " left" : "");
+    h.innerHTML = MINI_HAND_SVG;
+    el.appendChild(h);
+    const sg = left ? -1 : 1;
+    h.animate([
+      { transform: `translate(${-6 * sg}px, 16px) scale(0) rotate(${40 * sg}deg)` },
+      { transform: `translate(${-20 * sg}px, 0) scale(.9) rotate(${-55 * sg}deg)` },
+    ], { duration: 450, easing: "ease-out", fill: "forwards" });
+    return h;
+  });
   addHeat(amount);
   for (let t = 0; t < 6; t++) {
-    const a = at(first, .85, .35), b = at(last, .15, .35);
-    spawn("heart", pick(["💕", "💗", "💖"]), (a.x + b.x) / 2 - 11, a.y, (Math.random() - .5) * 60);
-    if (t % 2 === 0) cheekSparks();
+    const a = at(el, .5, .1);
+    spawn("heart", pick(["💕", "💗", "💖"]), a.x - 11 + (Math.random() - .5) * 50, a.y, (Math.random() - .5) * 60);
+    if (t % 2 === 0) cheekSparks(el);
     await wait(500);
   }
   await wait(400);
-  kidEls.forEach(el => el.classList.remove("cuddle"));
+  hands.forEach((h, i) => h.animate([
+    { transform: `translate(${-20 * (i ? -1 : 1)}px, 0) scale(.9) rotate(${-55 * (i ? -1 : 1)}deg)` },
+    { transform: `translate(${-6 * (i ? -1 : 1)}px, 16px) scale(0) rotate(${40 * (i ? -1 : 1)}deg)` },
+  ], { duration: 300, easing: "ease-in", fill: "forwards" }).finished.then(() => h.remove()));
+  el.classList.remove("cuddle");
   resetPoses();
   await wait(500);
 }
@@ -503,24 +517,26 @@ const MINI_HAND_SVG = `<svg viewBox="0 0 40 48" aria-hidden="true">
   <ellipse cx="20.5" cy="26" rx="6" ry="5" fill="#ffc2cc"/>
 </svg>`;
 
-// Trajet en petits sauts de (x0,y0) à (x1,y1) : décalages en px par rapport à la place de l'enfant
-async function hopTravel(el, x0, y0, x1, y1) {
+// Trajet en petits sauts de (x0,y0,taille z0) à (x1,y1,z1) : décalages en px par rapport à sa place.
+// La taille change en route (il grossit en venant vers la caméra).
+const place = (x, y, z) => `translate(${x}px, ${y}px) scale(${z})`;
+async function hopTravel(el, x0, y0, x1, y1, z0 = 1, z1 = 1) {
   const dist = Math.hypot(x1 - x0, y1 - y0);
-  const hops = Math.max(2, Math.round(dist / 110));
+  const hops = Math.max(2, Math.round(dist / 120));
   const tilt = x1 >= x0 ? 5 : -5;
   const frames = [];
   for (let h = 0; h < hops; h++) {
     for (let k = 0; k < 8; k++) {
-      const f = k / 8, p = (h + f) / hops;
-      const lift = Math.sin(Math.PI * f) * 34;
+      const f = k / 8, p = (h + f) / hops, z = z0 + (z1 - z0) * p;
+      const lift = Math.sin(Math.PI * f) * 34 * z;
       const squash = k === 0 ? "scale(1.06,.92)" : "scale(1,1)";
-      frames.push({ transform: `translate(${x0 + (x1 - x0) * p}px, ${y0 + (y1 - y0) * p - lift}px) rotate(${k === 0 ? 0 : tilt}deg) ${squash}` });
+      frames.push({ transform: `${place(x0 + (x1 - x0) * p, y0 + (y1 - y0) * p - lift, z)} rotate(${k === 0 ? 0 : tilt}deg) ${squash}` });
     }
   }
-  frames.push({ transform: `translate(${x1}px, ${y1}px) rotate(0deg) scale(1,1)` });
+  frames.push({ transform: `${place(x1, y1, z1)} rotate(0deg) scale(1,1)` });
   const anim = el.animate(frames, { duration: hops * 380, easing: "linear", fill: "forwards" });
   await anim.finished;
-  el.style.transform = `translate(${x1}px, ${y1}px)`;
+  el.style.transform = place(x1, y1, z1);
   anim.cancel();
 }
 
@@ -531,6 +547,7 @@ function screenPoint(name, def) {
   return { x: innerWidth * (ok ? p[0] : def.x) / 100, y: innerHeight * (ok ? p[1] : def.y) / 100 };
 }
 const highFiveSpot = () => screenPoint("hf", CONFIG.highFiveAt);
+const frontSpot = () => screenPoint("front", CONFIG.frontAt);
 const streamerSpot = () => screenPoint("me", CONFIG.streamerAt);
 // Tourne la tête d'un enfant : "r", "l" ou "" (de face)
 function turn(el, side) {
@@ -538,69 +555,78 @@ function turn(el, side) {
   if (side) el.classList.add("turn-" + side, "look-" + side);
 }
 
-async function playHighFive({ user, amount, kid }) {
-  const i = Math.max(0, Math.min(kidEls.length - 1, Number(kid) || 0));
-  const el = kidEls[i];
-  showBubble("highfive", user, CONFIG.kids[i].name);
-  const r = el.getBoundingClientRect();
-  const spot = highFiveSpot();
-  // l'enfant se pose centré sur le point
-  const dx = spot.x - (r.left + r.width / 2), dy = spot.y + r.height / 2 - r.bottom;
-  // pendant le trajet, il tourne la tête vers où il va ; l'autre le suit des yeux
-  turn(el, dx >= 0 ? "r" : "l");
-  kidEls.forEach(o => { if (o !== el) turn(o, o.getBoundingClientRect().left + o.offsetWidth / 2 < spot.x ? "r" : "l"); });
-  el.style.zIndex = 9;
-  await wait(300);
-  await hopTravel(el, 0, 0, dx, dy);
-  // arrivé : il se tourne vers la streameuse, et sa main sort de ce côté
-  const face = streamerSpot().x >= spot.x ? "r" : "l";
-  const sg = face === "r" ? 1 : -1;
-  turn(el, face);
-  await wait(250);
-
-  // sa petite main sort à côté de lui, du côté de la streameuse…
+// Sa petite main sort sur le côté (side "r" ou "l"), se tend vers la caméra (clap !) puis rentre
+async function handClap(el, side) {
+  const sg = side === "l" ? -1 : 1;
   const hand = document.createElement("div");
-  hand.className = "mhand" + (face === "l" ? " left" : "");
+  hand.className = "mhand" + (side === "l" ? " left" : "");
   hand.innerHTML = MINI_HAND_SVG;
   el.appendChild(hand);
   await hand.animate([
     { transform: `translate(${-8 * sg}px, 18px) scale(0) rotate(${35 * sg}deg)` },
-    { transform: `translate(${0 * sg}px, -6px) scale(1.15) rotate(${-14 * sg}deg)`, offset: .7 },
-    { transform: `translate(${0 * sg}px, -2px) scale(1) rotate(${-6 * sg}deg)` },
+    { transform: `translate(0, -6px) scale(1.15) rotate(${-14 * sg}deg)`, offset: .7 },
+    { transform: `translate(0, -2px) scale(1) rotate(${-6 * sg}deg)` },
   ], { duration: 520, easing: "ease-out", fill: "forwards" }).finished;
-  await wait(250);
-  // … il la tend vers la caméra pour taper dans la main de la streameuse : clap !
+  await wait(300);
   await hand.animate([
-    { transform: `translate(${0 * sg}px, -2px) scale(1) rotate(${-6 * sg}deg)` },
-    { transform: `translate(${3 * sg}px, -8px) scale(1.5) rotate(${0 * sg}deg)` },
+    { transform: `translate(0, -2px) scale(1) rotate(${-6 * sg}deg)` },
+    { transform: `translate(${3 * sg}px, -8px) scale(1.5) rotate(0deg)` },
   ], { duration: 360, easing: "ease-in", fill: "forwards" }).finished;
   const hr = hand.getBoundingClientRect();
   const c = { x: hr.left + hr.width / 2, y: hr.top + hr.height / 2 };
   spawn("impact", "", c.x - 12, c.y - 12);
-  for (let s = 0; s < 6; s++) spawn("spark", "✨", c.x - 8 + (Math.random() - .5) * 50, c.y - 10 + (Math.random() - .5) * 40, (Math.random() - .5) * 40);
+  for (let s = 0; s < 6; s++) spawn("spark", "✨", c.x - 8 + (Math.random() - .5) * 60, c.y - 10 + (Math.random() - .5) * 50, (Math.random() - .5) * 40);
   hand.animate([
-    { transform: `translate(${3 * sg}px, -8px) scale(1.5) rotate(${0 * sg}deg)` },
+    { transform: `translate(${3 * sg}px, -8px) scale(1.5) rotate(0deg)` },
     { transform: `translate(${5 * sg}px, -4px) scale(1.25) rotate(${8 * sg}deg)`, offset: .25 },
     { transform: `translate(${2 * sg}px, -6px) scale(1.3) rotate(${-10 * sg}deg)`, offset: .55 },
     { transform: `translate(${2 * sg}px, -6px) scale(1.3) rotate(${6 * sg}deg)`, offset: .8 },
-    { transform: `translate(${0 * sg}px, -2px) scale(1.1) rotate(${0 * sg}deg)` },
+    { transform: `translate(0, -2px) scale(1.1) rotate(0deg)` },
   ], { duration: 900, easing: "ease-in-out", fill: "forwards" });
-  addHeat(amount);
   el.classList.add("content");
   await wait(320);
   for (let t = 0; t < 3; t++) { cheekSparks(el); await wait(450); }
   el.classList.remove("content");
   await hand.animate([
-    { transform: `translate(${0 * sg}px, -2px) scale(1.1) rotate(${0 * sg}deg)` },
+    { transform: `translate(0, -2px) scale(1.1) rotate(0deg)` },
     { transform: `translate(${-8 * sg}px, 18px) scale(0) rotate(${35 * sg}deg)` },
   ], { duration: 300, easing: "ease-in", fill: "forwards" }).finished;
   hand.remove();
+}
 
-  // retour à sa place
-  turn(el, dx >= 0 ? "l" : "r");
-  await hopTravel(el, dx, dy, 0, 0);
+async function playHighFive({ user, amount }) {
+  const el = kidEls[0];
+  showBubble("highfive", user);
+  const r = el.getBoundingClientRect();
+  const foot = { x: r.left + r.width / 2, y: r.bottom };          // ses pieds, à sa place
+  const to = (p) => ({ x: p.x - foot.x, y: p.y - foot.y });         // décalage jusqu'à un point de l'écran
+  const a = to(highFiveSpot()), b = to(frontSpot());
+  const zoom = Math.max(1, innerHeight * CONFIG.frontSize / r.height);
+  el.style.zIndex = 9;
+
+  // 1. il sautille jusqu'à la streameuse, la tête tournée vers où il va…
+  turn(el, a.x >= 0 ? "r" : "l");
+  await wait(300);
+  await hopTravel(el, 0, 0, a.x, a.y);
+  // … se tourne vers elle et tape dans sa main
+  const side = streamerSpot().x >= foot.x + a.x ? "r" : "l";
+  turn(el, side);
+  await wait(250);
+  await handClap(el, side);
+  addHeat(amount);
+
+  // 2. il s'avance vers la caméra en grossissant, de face, et tape dans la main des viewers
+  turn(el, b.x >= a.x ? "r" : "l");
+  await hopTravel(el, a.x, a.y, b.x, b.y, 1, zoom);
+  turn(el, "");
+  await wait(300);
+  await handClap(el, "r");
+
+  // 3. retour à sa place
+  turn(el, b.x >= 0 ? "l" : "r");
+  await hopTravel(el, b.x, b.y, 0, 0, zoom, 1);
   el.style.transform = ""; el.style.zIndex = "";
-  kidEls.forEach(o => turn(o, ""));
+  turn(el, "");
   resetPoses();
   await wait(300);
 }
@@ -645,7 +671,7 @@ function handleEvent(ev) {
 window.kids = {
   feed: (user, amount) => handleEvent({ type: "feed", user, amount }),
   cuddle: (user, amount) => handleEvent({ type: "cuddle", user, amount }),
-  highfive: (kid, user, amount) => handleEvent({ type: "highfive", kid, user, amount }),
+  highfive: (user, amount) => handleEvent({ type: "highfive", user, amount }),
   reset: () => handleEvent({ type: "reset" }),
   get heat() { return heatTokens; },
 };
@@ -712,8 +738,7 @@ if (params.has("test")) {
     const k = e.key.toLowerCase();
     if (k === "f") kids.feed("Tester", 25);
     if (k === "c") kids.cuddle("Tester", 50);
-    if (k === "h") kids.highfive(0, "Tester", 40);
-    if (k === "j") kids.highfive(1, "Tester", 40);
+    if (k === "h") kids.highfive("Tester", 40);
     if (k === "0") kids.reset();
     if (/^[1-9]$/.test(k)) { heatTokens = CONFIG.heatMaxTokens * Number(k) / 10; save(); render(); }   // 1-9 = 10-90 %
     if (k === "+") { addHeat(200); }

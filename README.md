@@ -1,6 +1,6 @@
 # 🍄 Mushroom Kids
 
-Two fluffy mushroom kids for a stream overlay. Viewers feed them and cuddle them through the tip menu, and every tip fills their warmth gauge.
+One fluffy mushroom for a stream overlay. Viewers feed it, cuddle it and high-five it through the tip menu, and every tip fills its warmth gauge.
 
 **Preview:** https://vinceixiv.github.io/Mushroom-kid/
 It has two tabs, with explanations in Vietnamese: all the states side by side, and a live example.

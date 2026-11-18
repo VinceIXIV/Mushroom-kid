@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mushroom Kids</title>
-<meta name="description" content="Hai bé nấm bông cho màn hình stream: xem mọi trạng thái, rồi tự cho hai bé ăn và ôm hai bé.">
+<meta name="description" content="Một bé nấm bông cho màn hình stream: xem mọi trạng thái, rồi tự cho bé ăn, ôm bé và đập tay với bé.">
 <!--
   Page GitHub Pages. Chaque aperçu est le vrai overlay.html (sans OBS), piloté par postMessage.
   Onglet « All states » : tous les états côte à côte. Onglet « Live example » : on joue soi-même.
@@ -40,6 +40,7 @@
 
   /* Un aperçu de l'overlay */
   .screen { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--stage); }
+  .screen .me { position: absolute; left: 41%; top: 18%; width: 28%; height: 82%; border-radius: 50% 50% 0 0 / 30% 30% 0 0; background: rgba(255,255,255,.07); border: 2px dashed rgba(255,255,255,.18); border-bottom: 0; }
   .screen iframe { position: absolute; left: 0; top: 0; width: 480px; height: 360px; border: 0; transform-origin: 0 0; pointer-events: none; }
 
   /* Onglet 1 : tous les états */
@@ -105,7 +106,7 @@
 <body>
 <main>
   <h1>🍄 Mushroom Kids</h1>
-  <p class="lead">Hai bé nấm bông sống ở góc dưới màn hình stream. Viewer cho hai bé ăn và ôm hai bé qua tip menu, và mỗi lần tip lại làm hai bé ấm lên.</p>
+  <p class="lead">Một bé nấm bông sống ở góc dưới màn hình stream. Viewer cho bé ăn, ôm bé và đập tay với bé qua tip menu, và mỗi lần tip lại làm bé ấm lên.</p>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-states" aria-controls="states" aria-selected="true">Tất cả trạng thái</button>
@@ -130,12 +131,11 @@
           <label for="user">Tên người tip</label>
           <input type="text" id="user" value="LuckyTipper" maxlength="24" autocomplete="off">
           <div class="row">
-            <button class="big feed" data-type="feed">🍪 Feed the kids <small>25 tk · <kbd>F</kbd></small></button>
-            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kids <small>50 tk · <kbd>C</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="0">✋ Bibi high five <small>40 tk · <kbd>H</kbd></small></button>
-            <button class="big hf" data-type="highfive" data-kid="1">✋ Pouic high five <small>40 tk · <kbd>J</kbd></small></button>
+            <button class="big feed" data-type="feed">🍪 Feed the kid <small>25 tk · <kbd>F</kbd></small></button>
+            <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kid <small>50 tk · <kbd>C</kbd></small></button>
+            <button class="big hf" data-type="highfive">✋ High five <small>40 tk · <kbd>H</kbd></small></button>
           </div>
-          <p class="hint">Bấm phím <kbd>F</kbd>, <kbd>C</kbd>, <kbd>H</kbd> hoặc <kbd>J</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, hai bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy ra giữa màn hình để đập tay.</p>
+          <p class="hint">Bấm phím <kbd>F</kbd>, <kbd>C</kbd> hoặc <kbd>H</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: vùng tròn mờ là chỗ của bạn, bé nhảy tới đó để đập tay.</p>
         </div>
 
         <div class="card">
@@ -149,10 +149,10 @@
           <div class="ticks" id="ticks"></div>
 
           <ul class="how">
-            <li>Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> mới làm thanh đầy lên, theo số token đã tip: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle, <b>+40</b> mỗi lần high five trong ví dụ này.</li>
+            <li>Chỉ các món <b>Feed</b>, <b>Cuddle</b> và <b>high five</b> trong tip menu mới làm thanh đầy lên, theo giá của món: <b>+25</b> mỗi lần feed, <b>+50</b> mỗi lần cuddle, <b>+40</b> mỗi lần high five trong ví dụ này.</li>
             <li>Thanh <b>đầy khi đạt 2000 token</b>. Streamer tự chọn con số này và giá của từng món.</li>
             <li>Thanh <b>không bao giờ tự giảm</b>. Streamer làm trống thanh khi muốn, ví dụ lúc bắt đầu stream.</li>
-            <li>Càng ấm, hai bé trông càng vui lúc chờ. Dưới 10% thì hai bé bị lạnh và run.</li>
+            <li>Càng ấm, bé trông càng vui lúc chờ. Dưới 10% thì bé bị lạnh và run.</li>
           </ul>
 
           <input type="range" id="slider" min="0" max="100" value="45" aria-label="Chọn mức độ ấm">
@@ -162,7 +162,7 @@
     </div>
   </section>
 
-  <footer>Khi stream, nền trong suốt: hai bé nằm trên hình camera, ở chỗ streamer đặt trong OBS. Mọi chữ viewer nhìn thấy trên stream đều bằng tiếng Anh.</footer>
+  <footer>Khi stream, nền trong suốt: bé nằm trên hình camera, ở chỗ streamer đặt trong OBS. Mọi chữ viewer nhìn thấy trên stream đều bằng tiếng Anh.</footer>
 </main>
 
 <script>
@@ -171,18 +171,18 @@ const OVERLAY = "overlay.html?obs=0&names=0";
 
 /* Les humeurs : mêmes seuils que CONFIG.moods dans overlay.html */
 const MOODS = [
-  { key: "cold",     name: "Cold",     from: 0,  to: 10,  pct: 0,  text: "Hai bé phụng phịu và run lên. Đến lúc tip rồi!" },
-  { key: "neutral",  name: "Neutral",  from: 10, to: 45,  pct: 30, text: "Hai bé thở nhẹ, chớp mắt và chơi đùa với nhau." },
+  { key: "cold",     name: "Cold",     from: 0,  to: 10,  pct: 0,  text: "Bé phụng phịu và run lên. Đến lúc tip rồi!" },
+  { key: "neutral",  name: "Neutral",  from: 10, to: 45,  pct: 30, text: "Bé thở nhẹ, chớp mắt, nhìn quanh và thỉnh thoảng nhảy nhẹ." },
   { key: "comfy",    name: "Comfy",    from: 45, to: 60,  pct: 52, text: "Cười rộng hơn, má hồng hơn, thở chậm và thư thái hơn." },
   { key: "cosy",     name: "Cosy",     from: 60, to: 70,  pct: 65, text: "Cười hé miệng, má hồng hào và vài tia lấp lánh." },
-  { key: "happy",    name: "Happy",    from: 70, to: 90,  pct: 80, text: "Cười thật tươi, nhún nhảy và chơi với nhau nhiều hơn." },
+  { key: "happy",    name: "Happy",    from: 70, to: 90,  pct: 80, text: "Cười thật tươi, nhún nhảy và nhảy nhót nhiều hơn." },
   { key: "blissful", name: "Blissful", short: "Bliss", from: 90, to: 100, pct: 96, text: "Thỉnh thoảng nhắm mắt cười ^^, và có tim nhỏ bay lên." },
 ];
 const TIPS = [
-  { type: "feed",   name: "🍪 Feed the kids",   user: "LuckyTipper", every: 9000, text: "Đồ ăn rơi xuống, hai bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip." },
-  { type: "cuddle", name: "🤗 Cuddle the kids", user: "SweetViewer", every: 8000, text: "Hai bé nghiêng vào ôm nhau và tim bay lên. Bong bóng hiện tên người tip." },
-  { type: "highfive", name: "✋ Bibi high five · Pouic high five", user: "HappyFan", every: 9000, wide: true,
-    text: "Mỗi bé có một món riêng trong tip menu. Bé được tip nhảy lò cò ra giữa màn hình, giơ bàn tay nhỏ về phía camera để đập tay với bạn, rồi nhảy về chỗ cũ. Hai bé lần lượt làm ở đây." },
+  { type: "feed",   name: "🍪 Feed the kid",   user: "LuckyTipper", every: 9000, text: "Đồ ăn rơi xuống, bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip." },
+  { type: "cuddle", name: "🤗 Cuddle the kid", user: "SweetViewer", every: 8000, text: "Bé dùng hai bàn tay nhỏ ôm lấy mình, má ửng hồng và tim bay lên. Bong bóng hiện tên người tip." },
+  { type: "highfive", name: "✋ High five", user: "HappyFan", every: 14000, wide: true,
+    text: "Bé nhảy lò cò tới chỗ bạn, quay về phía bạn và giơ bàn tay nhỏ để đập tay với bạn. Rồi bé tiến lại gần camera, to dần lên, đập tay với viewer, và nhảy về chỗ cũ. Vùng tròn mờ là chỗ của bạn trên màn hình." },
 ];
 
 /* Un aperçu = le vrai overlay dans un iframe, mis à l'échelle */
@@ -192,11 +192,16 @@ function makePreview(box, onLoad, w = 480, h = 360) {
   const frame = document.createElement("iframe");
   frame.title = "Mushroom Kids overlay";
   // écran 16:9 réduit : la streameuse imaginaire à droite du centre, le high five à côté d'elle
-  frame.src = OVERLAY + (w > 480 ? "&me=72,38&hf=55,62" : "");
+  frame.src = OVERLAY + (w > 480 ? "&me=55,40&hf=33,64&front=46,97" : "&home=0.5,1");
   frame.style.width = w + "px";
   frame.style.height = h + "px";
   box.style.aspectRatio = `${w} / ${h}`;
   box.appendChild(frame);
+  if (w > 480) {   // silhouette de la streameuse, pour comprendre où il va
+    const me = document.createElement("div");
+    me.className = "me";
+    box.prepend(me);
+  }
   previews.push({ box, frame, w });
   const send = (msg) => frame.contentWindow.postMessage({ app: APP, ...msg }, "*");
   frame.addEventListener("load", () => onLoad && onLoad(send));
@@ -220,10 +225,9 @@ function buildStates() {
   };
   TIPS.forEach(t => {
     const box = card(document.getElementById("gridTips"), t.name, `lặp lại mỗi ${t.every / 1000} giây`, t.text, t.wide);
-    let turn = 0;   // high five : les deux enfants à tour de rôle
     makePreview(box, send => {
       send({ type: "set", pct: 40 });
-      const play = () => send({ type: t.type, user: t.user, amount: 0, kid: turn++ % 2 });
+      const play = () => send({ type: t.type, user: t.user, amount: 0 });
       setTimeout(play, 800);
       setInterval(play, t.every);
     }, t.wide ? 960 : 480, t.wide ? 540 : 360);
@@ -252,8 +256,7 @@ addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if (k === "f") tip("feed");
   if (k === "c") tip("cuddle");
-  if (k === "h") tip("highfive", 0);
-  if (k === "j") tip("highfive", 1);
+  if (k === "h") tip("highfive");
 });
 const slider = document.getElementById("slider");
 slider.addEventListener("input", () => live && live.send({ type: "set", pct: Number(slider.value) }));
