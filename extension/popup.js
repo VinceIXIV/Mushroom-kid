@@ -49,7 +49,7 @@ document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('clic
 const DEFAULT_ACTIONS = [
   { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
   { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
-  { id: 'hf0',    type: 'highfive', label: 'High five',      amount: 40 },
+  { id: 'hf0',    type: 'highfive', label: 'High five kid',  amount: 40 },
 ];
 
 async function load() {

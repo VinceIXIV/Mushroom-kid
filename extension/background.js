@@ -11,7 +11,7 @@ const DEFAULTS = {
     // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
     { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
     { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
-    { id: 'hf0',    type: 'highfive', label: 'High five',      amount: 40 },
+    { id: 'hf0',    type: 'highfive', label: 'High five kid',  amount: 40 },
   ],
 };
 const APP = 'enfants-champignons';
