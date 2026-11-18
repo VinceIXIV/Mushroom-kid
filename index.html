@@ -40,7 +40,6 @@
 
   /* Un aperçu de l'overlay */
   .screen { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--stage); }
-  .screen .me { position: absolute; left: 41%; top: 18%; width: 28%; height: 82%; border-radius: 50% 50% 0 0 / 30% 30% 0 0; background: rgba(255,255,255,.07); border: 2px dashed rgba(255,255,255,.18); border-bottom: 0; }
   .screen iframe { position: absolute; left: 0; top: 0; width: 480px; height: 360px; border: 0; transform-origin: 0 0; pointer-events: none; }
 
   /* Onglet 1 : tous les états */
@@ -181,7 +180,7 @@
             <button class="big cuddle" data-type="cuddle">🤗 Cuddle the kid <small>50 tk · <kbd>C</kbd></small></button>
             <button class="big hf" data-type="highfive">✋ High five <small>40 tk · <kbd>H</kbd></small></button>
           </div>
-          <p class="hint"><span data-l="vi">Bấm phím <kbd>F</kbd>, <kbd>C</kbd> hoặc <kbd>H</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: vùng tròn mờ là chỗ của bạn, bé nhảy tới đó để đập tay.</span><span data-l="en">Press <kbd>F</kbd>, <kbd>C</kbd> or <kbd>H</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn. This frame is like the whole stream screen: the faint rounded shape is you, and the mushroom hops there for the high five.</span></p>
+          <p class="hint"><span data-l="vi">Bấm phím <kbd>F</kbd>, <kbd>C</kbd> hoặc <kbd>H</kbd> trên bàn phím, hoặc bấm vào nút. Nếu có nhiều tip liên tiếp, bé sẽ làm lần lượt từng cái. Khung hình ở đây giống cả màn hình stream: bé nhảy tới chỗ bạn để đập tay, rồi tiến lại gần camera.</span><span data-l="en">Press <kbd>F</kbd>, <kbd>C</kbd> or <kbd>H</kbd> on your keyboard, or tap the buttons. Several tips in a row wait their turn. This frame is like the whole stream screen: the mushroom hops over to you for the high five, then comes towards the camera.</span></p>
         </div>
 
         <div class="card">
@@ -407,8 +406,8 @@ const TIPS = [
   { type: "feed",   name: "🍪 Feed the kid",   user: "LuckyTipper", every: 9000, text: { vi: "Đồ ăn rơi xuống, bé nhai ngon lành, rồi má ửng hồng. Bong bóng hiện tên người tip.", en: "Food drops, it munches, then its cheeks glow. The bubble shows who tipped." } },
   { type: "cuddle", name: "🤗 Cuddle the kid", user: "SweetViewer", every: 8000, text: { vi: "Bé dùng hai bàn tay nhỏ ôm lấy mình, má ửng hồng và tim bay lên. Bong bóng hiện tên người tip.", en: "It hugs itself with its two little hands, its cheeks glow and hearts float up. The bubble shows who tipped." } },
   { type: "highfive", name: "✋ High five", user: "HappyFan", every: 14000, wide: true,
-    text: { vi: "Bé nhảy lò cò tới chỗ bạn, quay về phía bạn và giơ bàn tay nhỏ để đập tay với bạn. Rồi bé tiến lại gần camera, to dần lên, đập tay với viewer, và nhảy về chỗ cũ. Vùng tròn mờ là chỗ của bạn trên màn hình.",
-            en: "It hops over to you, turns to you and raises its little hand for your high five. Then it comes closer to the camera, growing bigger, high-fives the viewers, and hops back home. The faint rounded shape is you on screen." } },
+    text: { vi: "Bé nhảy lò cò tới chỗ bạn, quay về phía bạn và giơ bàn tay nhỏ để đập tay với bạn. Rồi bé tiến lại gần camera, to dần lên, đập tay với viewer, và nhảy về chỗ cũ.",
+            en: "It hops over to you, turns to you and raises its little hand for your high five. Then it comes closer to the camera, growing bigger, high-fives the viewers, and hops back home." } },
 ];
 
 /* Un aperçu = le vrai overlay dans un iframe, mis à l'échelle */
@@ -423,11 +422,6 @@ function makePreview(box, onLoad, w = 480, h = 360) {
   frame.style.height = h + "px";
   box.style.aspectRatio = `${w} / ${h}`;
   box.appendChild(frame);
-  if (w > 480) {   // silhouette de la streameuse, pour comprendre où il va
-    const me = document.createElement("div");
-    me.className = "me";
-    box.prepend(me);
-  }
   previews.push({ box, frame, w });
   const send = (msg) => frame.contentWindow.postMessage({ app: APP, ...msg }, "*");
   frame.addEventListener("load", () => onLoad && onLoad(send));
