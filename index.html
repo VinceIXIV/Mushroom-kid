@@ -64,6 +64,8 @@
   label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
   input[type=text] { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
   input[type=text]:focus { outline: 2px solid var(--mint); outline-offset: 1px; }
+  input[type=password] { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  input[type=password]:focus { outline: 2px solid var(--mint); outline-offset: 1px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
   button.big { font-family: inherit; font-weight: 600; font-size: 16px; line-height: 1.25; color: #2b1d1a; border: 0; border-radius: 12px;
                padding: 12px 10px; cursor: pointer; transition: transform .1s, filter .15s; }
@@ -100,6 +102,33 @@
   ul.how b { color: var(--text); }
 
   footer { margin-top: 30px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Onglet 3 : guide d'installation */
+  .guide { max-width: 780px; }
+  .guide .card { margin-bottom: 16px; }
+  .guide h2 { font-size: 19px; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+  .guide h2 .num { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--mint); color: #1d1724; font-size: 15px; flex: none; }
+  .guide p, .guide li { line-height: 1.6; color: var(--text); }
+  .guide .muted { color: var(--muted); font-size: 14px; }
+  .guide ol.sub { padding-left: 20px; margin: 8px 0 0; }
+  .guide ol.sub > li { margin: 0 0 14px; }
+  .guide code { font-family: Consolas, "Cascadia Mono", monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 14px; }
+  .guide .shot { display: block; max-width: 100%; margin: 8px 0 0; border-radius: 10px; border: 1px solid var(--line); }
+  .guide .shot.missing { display: grid; place-items: center; height: 90px; color: var(--muted); font-size: 13px; border-style: dashed; }
+  .guide .warn { background: #3d2f1c; border: 1px solid #7a5a2a; border-radius: 10px; padding: 10px 12px; margin: 10px 0 0; }
+  .guide .ok { background: #1f3a30; border: 1px solid #2f6b55; border-radius: 10px; padding: 10px 12px; margin: 10px 0 0; }
+  .guide table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  .guide td { padding: 7px 10px; border-bottom: 1px solid var(--line); }
+  .guide td:first-child { font-weight: 700; white-space: nowrap; }
+  .guide details { border-top: 1px solid var(--line); padding: 10px 0; }
+  .guide summary { cursor: pointer; font-weight: 600; }
+  .dl { display: inline-flex; align-items: center; gap: 8px; font-family: inherit; font-weight: 700; font-size: 16px; color: #1d1724; background: var(--mint); border: 0; border-radius: 12px; padding: 12px 18px; cursor: pointer; }
+  .dl:disabled { opacity: .6; cursor: wait; }
+  .urlbox { display: grid; gap: 10px; margin: 10px 0 0; }
+  .urlbox select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+  .urlrow { display: flex; gap: 8px; }
+  .urlrow input { flex: 1; min-width: 0; }
+  .urlrow button { flex: none; }
 </style>
 </head>
 <body>
@@ -110,6 +139,7 @@
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-states" aria-controls="states" aria-selected="true">Tất cả trạng thái</button>
     <button class="tab" role="tab" id="tab-live" aria-controls="live" aria-selected="false">Thử trực tiếp</button>
+    <button class="tab" role="tab" id="tab-install" aria-controls="install" aria-selected="false">Hướng dẫn cài đặt</button>
   </div>
 
   <!-- ============ Onglet 1 : tous les états ============ -->
@@ -162,9 +192,164 @@
     </div>
   </section>
 
+  <!-- ============ Onglet 3 : guide d'installation ============ -->
+  <section id="install" role="tabpanel" aria-labelledby="tab-install" hidden>
+    <div class="guide">
+      <div class="card">
+        <p><b>Bạn cần:</b> máy tính có <b>Chrome</b> và <b>OBS</b> (bản 28 trở lên). Khoảng 15 phút.</p>
+        <p class="muted">Không cần cài phần mềm nào khác, không cần tài khoản hay mật khẩu Stripchat. Mọi thứ chạy trên máy của bạn, không có dữ liệu nào bị gửi đi đâu.</p>
+      </div>
+
+      <!-- 1 -->
+      <div class="card">
+        <h2><span class="num">1</span> Tải tiện ích Mushroom Kids</h2>
+        <button class="dl" id="dlExt">⬇️ Tải tiện ích (.zip)</button>
+        <p class="muted" id="dlInfo"></p>
+        <ol class="sub">
+          <li>Mở thư mục <b>Tải xuống</b> (Downloads), bấm chuột phải vào tệp <code>mushroom-kids-extension.zip</code> → <b>Giải nén tất cả</b> (Extract All) → <b>Giải nén</b>.</li>
+          <li>Bạn sẽ có thư mục <code>mushroom-kids-extension</code>. <b>Đừng xoá thư mục này</b> sau khi cài: Chrome cần nó.</li>
+        </ol>
+      </div>
+
+      <!-- 2 -->
+      <div class="card">
+        <h2><span class="num">2</span> Cài tiện ích vào Chrome</h2>
+        <ol class="sub">
+          <li>Gõ <code>chrome://extensions</code> vào thanh địa chỉ rồi bấm Enter.
+            <img class="shot" loading="lazy" src="captures/10-ext-page.png" alt=""></li>
+          <li>Bật <b>Developer mode</b> (Chế độ dành cho nhà phát triển) ở góc trên bên phải.
+            <img class="shot" loading="lazy" src="captures/11-ext-dev-mode.png" alt=""></li>
+          <li>Bấm <b>Load unpacked</b> (Tải tiện ích đã giải nén).
+            <img class="shot" loading="lazy" src="captures/12-ext-choose-folder-button.png" alt=""></li>
+          <li>Chọn thư mục <code>mushroom-kids-extension</code> rồi bấm <b>Chọn thư mục</b> (Select Folder).
+            <div class="warn">Cửa sổ trông trống trơn là <b>bình thường</b>: Chrome chỉ hiện thư mục, không hiện tệp bên trong.</div>
+            <img class="shot" loading="lazy" src="captures/12-ext-choose-folder.png" alt=""></li>
+          <li>Thẻ <b>Mushroom Kids</b> xuất hiện.
+            <img class="shot" loading="lazy" src="captures/13-ext-loaded.png" alt=""></li>
+          <li>Bấm biểu tượng <b>mảnh ghép</b> 🧩 cạnh thanh địa chỉ, rồi bấm <b>cái ghim</b> cạnh Mushroom Kids để biểu tượng của nó luôn hiện.
+            <img class="shot" loading="lazy" src="captures/14-ext-pin.png" alt=""></li>
+        </ol>
+      </div>
+
+      <!-- 3 -->
+      <div class="card">
+        <h2><span class="num">3</span> Bật WebSocket trong OBS</h2>
+        <p class="muted">Đây là cách để tiện ích "nói chuyện" với OBS trên máy của bạn.</p>
+        <ol class="sub">
+          <li>Trong OBS, mở menu <b>Tools</b> (Công cụ) → <b>WebSocket Server Settings</b>.
+            <img class="shot" loading="lazy" src="captures/01-obs-menu-tools.png" alt=""></li>
+          <li>Tick <b>Enable WebSocket server</b>. Giữ cổng <b>4455</b> và giữ <b>Enable Authentication</b> được tick. Bấm <b>Apply</b>.
+            <img class="shot" loading="lazy" src="captures/03-obs-websocket-on.png" alt=""></li>
+          <li>Bấm <b>Show Connect Info</b>.
+            <img class="shot" loading="lazy" src="captures/04-obs-connect-info-button.png" alt=""></li>
+          <li>Bấm <b>Copy</b> cạnh <b>Server Password</b> để sao chép mật khẩu.
+            <img class="shot" loading="lazy" src="captures/04-obs-connect-info.png" alt="">
+            <p class="muted">Mật khẩu này chỉ dùng trên máy của bạn. Đừng gửi nó cho ai, và đừng để nó hiện trên stream.</p></li>
+        </ol>
+      </div>
+
+      <!-- 4 -->
+      <div class="card">
+        <h2><span class="num">4</span> Nối tiện ích với OBS</h2>
+        <ol class="sub">
+          <li>Bấm biểu tượng <b>Mushroom Kids</b> trên Chrome. Bấm <b>lá cờ Việt Nam</b> ở góc trên bên phải để chuyển sang tiếng Việt.</li>
+          <li>Dán mật khẩu vào ô <b>Mật khẩu WebSocket</b> rồi bấm <b>Lưu</b>.
+            <div class="shot missing">Ảnh minh hoạ sẽ được thêm sau</div></li>
+          <li>Dòng trên cùng chuyển sang màu xanh: <b>OBS: đã kết nối</b>.
+            <div class="shot missing">Ảnh minh hoạ sẽ được thêm sau</div></li>
+        </ol>
+      </div>
+
+      <!-- 5 -->
+      <div class="card">
+        <h2><span class="num">5</span> Thêm hai bé vào OBS</h2>
+        <p>Trước tiên, tạo địa chỉ cho OBS ở đây:</p>
+        <div class="urlbox">
+          <label for="pw">Dán mật khẩu WebSocket (ở bước 3)</label>
+          <input type="password" id="pw" autocomplete="off" placeholder="mật khẩu">
+          <label for="corner">Hai bé ngồi ở góc nào?</label>
+          <select id="corner">
+            <option value="0,1">Góc dưới bên trái</option>
+            <option value="1,1">Góc dưới bên phải</option>
+          </select>
+          <label for="url">Địa chỉ cho OBS</label>
+          <div class="urlrow"><input type="text" id="url" readonly><button class="small" id="copyUrl">Sao chép</button></div>
+          <p class="muted">Mật khẩu chỉ nằm trên máy của bạn: trang này không gửi nó đi đâu cả.</p>
+        </div>
+        <ol class="sub">
+          <li>Trong OBS, ở ô <b>Sources</b> (Nguồn), bấm <b>+</b> → <b>Browser</b> (Trình duyệt). Đặt tên <b>Mushroom Kids</b> rồi bấm OK.
+            <img class="shot" loading="lazy" src="captures/05-obs-sources-plus.png" alt=""></li>
+          <li>Trong cửa sổ hiện ra:
+            <ul>
+              <li><b>Bỏ tick</b> ô <b>Local file</b>.</li>
+              <li>Dán địa chỉ vừa sao chép vào ô <b>URL</b>.</li>
+              <li><b>Width</b> = <code>1920</code>, <b>Height</b> = <code>1080</code> (hoặc đúng kích thước khung hình OBS của bạn).</li>
+              <li>Bấm <b>OK</b>.</li>
+            </ul>
+            <div class="shot missing">Ảnh minh hoạ sẽ được thêm sau</div></li>
+          <li>Hai bé xuất hiện ở góc dưới màn hình, nền trong suốt. <b>Không cần kéo giãn</b> nguồn này: cứ để nó phủ cả màn hình, vì hai bé sẽ nhảy ra giữa màn hình khi có high five.
+            <div class="shot missing">Ảnh minh hoạ sẽ được thêm sau</div></li>
+        </ol>
+      </div>
+
+      <!-- 6 -->
+      <div class="card">
+        <h2><span class="num">6</span> Thêm các món vào tip menu Stripchat</h2>
+        <p>Thêm các món này vào tip menu của bạn, với giá bạn muốn:</p>
+        <table>
+          <tr><td>Feed the kids</td><td>hai bé ăn 🍪</td></tr>
+          <tr><td>Cuddle the kids</td><td>hai bé ôm nhau 🤗</td></tr>
+          <tr><td>Bibi high five</td><td>bé mũ kem đập tay với bạn ✋</td></tr>
+          <tr><td>Pouic high five</td><td>bé mũ xanh bạc hà đập tay với bạn ✋</td></tr>
+        </table>
+        <div class="warn">⚠️ <b>Tên món trong tip menu phải giống tên trong tiện ích</b> (phần <b>Tip menu</b> trong tiện ích). Bạn có thể thêm emoji quanh tên, chữ hoa hay chữ thường đều được. Nếu bạn đổi tên một món, hãy đổi giống vậy trong tiện ích rồi bấm <b>Lưu</b>.</div>
+        <p class="muted">Ô <b>giá (tk)</b> trong tiện ích: để <b>0</b> là đơn giản nhất. Nếu bạn điền một số, một tip thường đúng số token đó (không qua tip menu) cũng làm hai bé chạy hoạt ảnh.</p>
+      </div>
+
+      <!-- 7 -->
+      <div class="card">
+        <h2><span class="num">7</span> Thử</h2>
+        <ol class="sub">
+          <li>Trong tiện ích, bấm <b>🍪 Feed</b>: hai bé ăn trong OBS. Thử cả <b>🤗 Cuddle</b>, <b>✋ 1</b> và <b>✋ 2</b>.
+            <div class="shot missing">Ảnh minh hoạ sẽ được thêm sau</div></li>
+          <li>Mở trang stream Stripchat của bạn trong Chrome. Nếu trang đã mở từ trước khi cài tiện ích, bấm <b>F5</b> để tải lại.</li>
+          <li>Khi có người tip một món, hai bé sẽ phản ứng, và tip đó hiện trong <b>Hoạt ảnh gần đây</b> của tiện ích.</li>
+        </ol>
+        <div class="ok">🎉 Xong rồi! <b>Mỗi lần stream</b>, chỉ cần mở OBS, và mở trang Stripchat của bạn trong Chrome (để tab đó mở suốt buổi stream).</div>
+      </div>
+
+      <!-- Problèmes -->
+      <div class="card">
+        <h2>🛠️ Gặp trục trặc?</h2>
+        <details><summary>Tiện ích ghi "sai mật khẩu OBS"</summary>
+          <p>Sao chép lại mật khẩu ở bước 3, dán vào tiện ích và bấm <b>Lưu</b>. Nếu bạn đã đổi mật khẩu trong OBS, hãy tạo lại địa chỉ ở bước 5 và dán lại vào nguồn Mushroom Kids.</p></details>
+        <details><summary>Tiện ích ghi "không kết nối được với OBS"</summary>
+          <p>OBS phải đang mở, và WebSocket phải được bật (bước 3). Sau đó bấm nút <b>↻</b> trong tiện ích.</p></details>
+        <details><summary>Có tip nhưng hai bé không phản ứng</summary>
+          <p>Kiểm tra tên món trong tip menu có giống tên trong tiện ích không (bước 6). Bấm <b>F5</b> trên trang Stripchat. Trang Stripchat phải được mở trong Chrome có tiện ích.</p></details>
+        <details><summary>Hai bé không hiện trong OBS</summary>
+          <p>Chuột phải vào nguồn Mushroom Kids → <b>Properties</b>: kiểm tra địa chỉ trong ô URL, rồi bấm <b>Refresh</b> (Làm mới).</p></details>
+        <details><summary>Hai bé ngồi sai chỗ</summary>
+          <p>Chọn góc khác ở bước 5, sao chép địa chỉ mới và dán lại vào nguồn Mushroom Kids.</p></details>
+      </div>
+
+      <!-- Désinstaller -->
+      <div class="card">
+        <h2>🧹 Gỡ bỏ</h2>
+        <p>Muốn bỏ hai bé? Chỉ mất một phút, mọi thứ trở lại như cũ:</p>
+        <ol class="sub">
+          <li>Vào <code>chrome://extensions</code>, bấm <b>Remove</b> (Xoá) ở thẻ Mushroom Kids.</li>
+          <li>Trong OBS, chọn nguồn Mushroom Kids và xoá nó.</li>
+          <li>Nếu muốn, tắt lại WebSocket ở bước 3.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
   <footer>Khi stream, nền trong suốt: hai bé nằm trên hình camera, ở chỗ streamer đặt trong OBS. Mọi chữ viewer nhìn thấy trên stream đều bằng tiếng Anh.</footer>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const APP = "enfants-champignons";
 const OVERLAY = "overlay.html?obs=0&names=0";
@@ -284,8 +469,57 @@ addEventListener("message", e => {
   if (document.activeElement !== slider) slider.value = d.pct;
 });
 
+/* ---------- Onglet 3 : guide d'installation ---------- */
+// L'extension est zippée à la volée depuis les fichiers en ligne : le zip est toujours à jour.
+const SITE = "https://vinceixiv.github.io/Mushroom-kid/";
+const EXT_FILES = ["manifest.json", "background.js", "content.js", "popup.html", "popup.js"];
+document.getElementById("dlExt").addEventListener("click", async (e) => {
+  const btn = e.currentTarget, info = document.getElementById("dlInfo");
+  btn.disabled = true; info.textContent = "Đang chuẩn bị…";
+  try {
+    const base = location.protocol.startsWith("http") ? "extension/" : SITE + "extension/";
+    const zip = new JSZip();
+    const folder = zip.folder("mushroom-kids-extension");
+    for (const f of EXT_FILES) {
+      const r = await fetch(base + f, { cache: "no-store" });
+      if (!r.ok) throw new Error(f);
+      folder.file(f, await r.blob());
+    }
+    const blob = await zip.generateAsync({ type: "blob" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mushroom-kids-extension.zip";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    info.textContent = "Đã tải xong ✓ Tệp nằm trong thư mục Tải xuống (Downloads).";
+  } catch (err) {
+    info.textContent = "Không tải được. Kiểm tra kết nối mạng rồi thử lại.";
+  }
+  btn.disabled = false;
+});
+
+// Adresse de la source OBS : mot de passe + coin. Rien n'est envoyé : tout se passe dans la page.
+function buildUrl() {
+  const pw = document.getElementById("pw").value.trim();
+  document.getElementById("url").value = pw
+    ? `${SITE}overlay.html?pw=${encodeURIComponent(pw)}&home=${document.getElementById("corner").value}`
+    : "";
+  document.getElementById("url").placeholder = "Dán mật khẩu ở trên trước";
+}
+document.getElementById("pw").addEventListener("input", buildUrl);
+document.getElementById("corner").addEventListener("change", buildUrl);
+document.getElementById("copyUrl").addEventListener("click", async (e) => {
+  const v = document.getElementById("url").value;
+  if (!v) return;
+  try { await navigator.clipboard.writeText(v); } catch (err) { document.getElementById("url").select(); document.execCommand("copy"); }
+  e.currentTarget.textContent = "Đã chép ✓";
+  setTimeout(() => (e.target.textContent = "Sao chép"), 1500);
+});
+buildUrl();
+
 /* ---------- Onglets ---------- */
-const tabs = { states: document.getElementById("tab-states"), live: document.getElementById("tab-live") };
+const TAB_NAMES = ["states", "live", "install"];
+const tabs = Object.fromEntries(TAB_NAMES.map(n => [n, document.getElementById("tab-" + n)]));
 function show(name) {
   Object.entries(tabs).forEach(([key, tab]) => {
     const on = key === name;
@@ -293,16 +527,19 @@ function show(name) {
     tab.tabIndex = on ? 0 : -1;
     document.getElementById(key).hidden = !on;
   });
-  if (name === "states") buildStates(); else buildLive();
+  if (name === "states") buildStates();
+  if (name === "live") buildLive();
   fit();
   if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
 }
-tabs.states.addEventListener("click", () => show("states"));
-tabs.live.addEventListener("click", () => show("live"));
+TAB_NAMES.forEach(n => tabs[n].addEventListener("click", () => show(n)));
 document.querySelector(".tabs").addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { const next = tabs.states.getAttribute("aria-selected") === "true" ? "live" : "states"; show(next); tabs[next].focus(); }
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const i = TAB_NAMES.findIndex(n => tabs[n].getAttribute("aria-selected") === "true");
+  const next = TAB_NAMES[(i + (e.key === "ArrowRight" ? 1 : TAB_NAMES.length - 1)) % TAB_NAMES.length];
+  show(next); tabs[next].focus();
 });
-show(location.hash === "#live" ? "live" : "states");
+show(TAB_NAMES.includes(location.hash.slice(1)) ? location.hash.slice(1) : "states");
 </script>
 </body>
 </html>
