@@ -81,16 +81,42 @@
     }
   }
 
-  // Diagnostic : un message qui ressemble à un tip (« 18 tk ») mais qu'on n'a pas reconnu
+  // Filet de sécurité qui ne dépend pas de la structure du chat :
+  // un message ajouté qui contient un montant (« 18 tk ») ET le nom d'un item réglé dans l'extension = un tip à animer.
+  // Sinon, s'il ressemble à un tip, on le signale au diagnostic (ses classes disent quels repères ajouter).
+  const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  let labels = [];
+  const useLabels = (actions) => { labels = (actions || []).map((a) => norm(a.label)).filter(Boolean); };
+  try {
+    chrome.storage.local.get('actions').then(({ actions }) => useLabels(actions));
+    chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c.actions) useLabels(c.actions.newValue); });
+  } catch (e) {}
+  const done = new WeakSet();
+  const handled = (n) => { for (let e = n; e; e = e.parentElement) if (done.has(e) || seen.has(e)) return true; return false; };
   let unknownSent = 0;
-  function maybeUnknown(n) {
-    if (unknownSent >= 5) return;
-    const t = clean(n.textContent);
-    if (!TIP_TEXT.test(t) || t.length > 400) return;
-    if (safe(() => n.closest(R.row.join(','))) || rowsIn(n).length) return;
-    unknownSent++;
-    const cls = (e) => (e && typeof e.className === 'string' ? e.className : '').slice(0, 120);
-    msg({ type: 'unknown', sample: `${n.tagName.toLowerCase()}.${cls(n)} > ${cls(n.firstElementChild)} | ${t.slice(0, 80)}` });
+  function maybeTextTip(n) {
+    setTimeout(() => {
+      if (!n.isConnected || handled(n)) return;
+      const t = clean(n.innerText || n.textContent);
+      if (!t || t.length > 400 || !TIP_TEXT.test(t)) return;
+      if (safe(() => n.closest(R.row.join(',')))) return;
+      const nt = norm(t);
+      if (labels.some((l) => nt.includes(l))) {
+        done.add(n);
+        const m = t.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jt|jts|jetons?)\b/i);
+        const userEl = first(n, R.user);
+        const tip = { user: clean(userEl && userEl.textContent) || (t.split(' ')[0] || 'someone').slice(0, 32),   // sinon : le premier mot, le pseudo amount: m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0, menu: false, comment: '', text: t.slice(0, 300) };
+        const now = Date.now();
+        for (const [k, v] of recent) if (now - v > 3000) recent.delete(k);
+        if (recent.has(tip.text)) return;
+        recent.set(tip.text, now);
+        msg({ type: 'tip', ...tip });
+      } else if (unknownSent < 5) {
+        unknownSent++;
+        const cls = (e) => (e && typeof e.className === 'string' ? e.className : '').slice(0, 120);
+        msg({ type: 'unknown', sample: `${n.tagName.toLowerCase()}.${cls(n)} > ${cls(n.firstElementChild)} | ${t.slice(0, 80)}` });
+      }
+    }, R.delay);
   }
 
   new MutationObserver((muts) => {
@@ -99,7 +125,7 @@
       for (const n of mu.addedNodes) {
         if (n.nodeType !== 1) continue;
         const found = rowsIn(n);
-        if (found.length) rows.push(...found); else maybeUnknown(n);
+        if (found.length) rows.push(...found); else maybeTextTip(n);
       }
     }
     if (rows.length) handle(rows);
