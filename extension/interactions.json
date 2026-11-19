@@ -1,0 +1,7 @@
+{
+  "interactions": [
+    { "id": "feed",   "type": "feed",     "label": "Feed the baby",   "amount": 8,  "emoji": "🍪", "name": { "en": "Feed",      "vi": "Cho ăn" } },
+    { "id": "cuddle", "type": "cuddle",   "label": "Cuddle the baby", "amount": 16, "emoji": "🤗", "name": { "en": "Cuddle",    "vi": "Ôm" } },
+    { "id": "hf0",    "type": "highfive", "label": "High five baby",  "amount": 3,  "emoji": "✋", "name": { "en": "High five", "vi": "Đập tay" } }
+  ]
+}

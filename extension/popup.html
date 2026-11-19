@@ -21,6 +21,10 @@
   li { padding: 3px 0; border-bottom: 1px solid #eadfd2; display: flex; justify-content: space-between; gap: 8px; }
   li .a { white-space: nowrap; }
   #saved { color: #3b8a4a; margin-left: 6px; }
+  ul.items { max-height: none; }
+  ul.items li { align-items: baseline; }
+  ul.items .lbl { font-weight: 600; }
+  ul.items .what { color: #8a6f5c; font-size: 12px; }
   details { margin-top: 14px; }
   summary { cursor: pointer; color: #8a6f5c; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
   pre { white-space: pre-wrap; word-break: break-word; font: 11px/1.45 Consolas, monospace; background: #fff; border: 1px solid #eadfd2; border-radius: 6px; padding: 6px 8px; margin: 6px 0 0; }
@@ -47,19 +51,12 @@
 
   <h2 data-i18n="tryIt"></h2>
   <label><span data-i18n="bubbleName"></span> <input type="text" id="testUser" value="Phi"></label>
-  <div class="btns">
-    <button data-sim="feed">🍪 Feed</button>
-    <button data-sim="cuddle">🤗 Cuddle</button>
-    <button data-sim="hf0">✋ High five</button>
-    <button data-sim="reset" data-i18n="resetWarmth"></button>
-  </div>
+  <div class="btns" id="tests"></div>
+  <div class="btns" style="margin-top:6px"><button id="resetBtn" data-i18n="resetWarmth"></button></div>
 
   <h2 data-i18n="triggers"></h2>
-  <div class="row"><label><span data-i18n="itemFeed"></span> <input type="text" id="feedLabel"></label><label><span data-i18n="price"></span> <input type="number" id="feedAmount" min="0"></label></div>
-  <div class="row"><label><span data-i18n="itemCuddle"></span> <input type="text" id="cuddleLabel"></label><label><span data-i18n="price"></span> <input type="number" id="cuddleAmount" min="0"></label></div>
-  <div class="row"><label><span data-i18n="itemHf0"></span> <input type="text" id="hf0Label"></label><label><span data-i18n="price"></span> <input type="number" id="hf0Amount" min="0"></label></div>
+  <div id="items"></div>
   <p class="note" data-i18n="triggersHelp"></p>
-  <small data-i18n="priceHelp"></small>
 
   <h2 data-i18n="gauge"></h2>
   <div class="row"><label data-i18n="fullAt"></label><label><span data-i18n="tokens"></span> <input type="number" id="heatMax" min="1"></label></div>

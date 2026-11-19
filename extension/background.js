@@ -2,25 +2,30 @@
 // par le serveur WebSocket intégré d'OBS (v5) : requête BroadcastCustomEvent,
 // que l'overlay des enfants reçoit sous forme d'événement CustomEvent.
 
+// Réglages propres à la streameuse (modifiables dans la popup) : seulement OBS et la jauge.
 const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
   heatMax: 200,      // tokens pour remplir la jauge de chaleur à 100 %
-  // id : identifiant du réglage (un seul champignon)
-  actions: [
-    // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
-    { id: 'feed',   type: 'feed',     label: 'Feed the baby',   amount: 8 },
-    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the baby', amount: 16 },
-    { id: 'hf0',    type: 'highfive', label: 'High five baby',  amount: 3 },
-  ],
 };
 const APP = 'enfants-champignons';
+const SITE = 'https://vinceixiv.github.io/Mushroom-kid/extension/';
+
+// Les interactions (items du tip menu, prix, boutons de test) viennent du fichier extension/interactions.json
+// sur la page GitHub : on le modifie là-bas, et l'extension suit toute seule, sans mise à jour.
+// Cette liste-ci ne sert que si le fichier n'a encore jamais pu être téléchargé.
+const BUILTIN_INTERACTIONS = [
+  { id: 'feed',   type: 'feed',     label: 'Feed the baby',   amount: 8,  emoji: '🍪', name: { en: 'Feed', vi: 'Cho ăn' } },
+  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the baby', amount: 16, emoji: '🤗', name: { en: 'Cuddle', vi: 'Ôm' } },
+  { id: 'hf0',    type: 'highfive', label: 'High five baby',  amount: 3,  emoji: '✋', name: { en: 'High five', vi: 'Đập tay' } },
+];
 
 async function getSettings() {
   const s = await chrome.storage.local.get(null);
-  // réglages enregistrés par une version précédente (sans id ni high five) : on complète
-  const saved = s.actions || [];
-  const actions = DEFAULTS.actions.map((d) => ({ ...d, ...(saved.find((x) => (x.id || x.type) === d.id) || {}), id: d.id, type: d.type, kid: d.kid }));
+  const list = Array.isArray(s.interactions) && s.interactions.length ? s.interactions : BUILTIN_INTERACTIONS;
+  // ses noms et prix à elle (popup) gagnent sur les valeurs par défaut de la liste
+  const mine = s.overrides || {};
+  const actions = list.filter((a) => a && a.id && a.type).map((a) => ({ ...a, ...(mine[a.id] || {}) })).filter((a) => a.label);
   return { ...DEFAULTS, ...s, actions };
 }
 
@@ -110,15 +115,19 @@ function decide(tip, s) {
   return null;
 }
 
-/* ---------------- Repères du chat, réglables à distance (extension/rules.json sur la page GitHub) ---------------- */
-const RULES_URL = 'https://vinceixiv.github.io/Mushroom-kid/extension/rules.json';
-async function refreshRules() {
-  const { rulesAt = 0 } = await chrome.storage.local.get('rulesAt');
-  if (Date.now() - rulesAt < 30 * 60 * 1000) return;   // au plus toutes les 30 min
-  try {
-    const r = await fetch(RULES_URL + '?t=' + Date.now(), { cache: 'no-store' });
-    if (r.ok) await chrome.storage.local.set({ rules: await r.json(), rulesAt: Date.now() });
-  } catch (e) { /* hors ligne : on garde les repères connus */ }
+/* ---------------- Réglages à distance (page GitHub) ----------------
+   - extension/interactions.json : les items du tip menu, leurs prix, les boutons de test
+   - extension/rules.json        : les repères pour lire le chat Stripchat
+   Relus à l'ouverture de la popup (force) et au chargement d'une page Stripchat (au plus une fois par minute).
+   Hors ligne, on garde la dernière version téléchargée. */
+async function refreshRemote(force) {
+  const { remoteAt = 0 } = await chrome.storage.local.get('remoteAt');
+  if (!force && Date.now() - remoteAt < 60 * 1000) return;
+  const get = async (f) => { const r = await fetch(SITE + f + '?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) throw new Error(f); return r.json(); };
+  const update = { remoteAt: Date.now() };
+  try { const list = await get('interactions.json'); if (Array.isArray(list.interactions) && list.interactions.length) update.interactions = list.interactions; } catch (e) {}
+  try { update.rules = await get('rules.json'); } catch (e) {}
+  await chrome.storage.local.set(update);
 }
 
 /* ---------------- Diagnostic (affiché replié en bas de la popup) ---------------- */
@@ -152,7 +161,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   (async () => {
     const s = await getSettings();
     if (msg.type === 'hello') {
-      refreshRules();
+      refreshRemote(false);
       await diag((d) => { d.frames = [...new Set([msg.frame + ' ' + msg.url, ...(d.frames || [])])].slice(0, 4); });
       reply({ ok: true });
     } else if (msg.type === 'unknown') {
@@ -180,6 +189,9 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
         : { type: a.type, kid: a.kid, user: msg.user || 'Phi', amount: Number(a.amount) || 0 };
       try { await sendToOBS(ev); await log({ user: ev.user || '—', amount: ev.amount || 0, action: msg.action, sent: true, simulated: true }); reply({ ok: true }); }
       catch (e) { reply({ ok: false, error: e.message }); }
+    } else if (msg.type === 'refreshRemote') {
+      await refreshRemote(true);
+      reply({ ok: true });
     } else if (msg.type === 'reconnect') {
       try { if (ws) ws.close(); } catch (e) {}
       ws = null; ready = null;
@@ -192,7 +204,11 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
 
 chrome.runtime.onInstalled.addListener(async () => {
   const s = await chrome.storage.local.get(null);
-  await chrome.storage.local.set({ ...DEFAULTS, ...s, rulesAt: 0 });
-  refreshRules();
+  // anciens réglages d'interactions (avant 0.3) : remplacés par la liste distante.
+  // Le mot de passe, le port et le total de la jauge sont gardés.
+  delete s.actions; delete s.rulesAt;
+  await chrome.storage.local.remove(['actions', 'rulesAt']);
+  await chrome.storage.local.set({ ...DEFAULTS, ...s, remoteAt: 0 });
+  refreshRemote(true);
 });
-chrome.runtime.onStartup.addListener(refreshRules);
+chrome.runtime.onStartup.addListener(() => refreshRemote(true));
