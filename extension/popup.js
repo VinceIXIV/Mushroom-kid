@@ -51,9 +51,9 @@ document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('clic
 
 // Mêmes réglages par défaut que background.js
 const DEFAULT_ACTIONS = [
-  { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
-  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
-  { id: 'hf0',    type: 'highfive', label: 'High five kid',  amount: 40 },
+  { id: 'feed',   type: 'feed',     label: 'Feed the baby',   amount: 8 },
+  { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the baby', amount: 16 },
+  { id: 'hf0',    type: 'highfive', label: 'High five baby',  amount: 3 },
 ];
 
 async function load() {
@@ -138,7 +138,7 @@ async function checkUpdate() {
 }
 
 document.querySelectorAll('[data-sim]').forEach((b) => b.addEventListener('click', async () => {
-  const r = await chrome.runtime.sendMessage({ type: 'simulate', action: b.dataset.sim, user: $('testUser').value.trim() || 'Tester' });
+  const r = await chrome.runtime.sendMessage({ type: 'simulate', action: b.dataset.sim, user: $('testUser').value.trim() || 'Phi' });
   if (r && !r.ok) showStatus(r.error);
 }));
 $('save').addEventListener('click', save);

@@ -9,9 +9,9 @@ const DEFAULTS = {
   // id : identifiant du réglage (un seul champignon)
   actions: [
     // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
-    { id: 'feed',   type: 'feed',     label: 'Feed the kid',   amount: 25 },
-    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the kid', amount: 50 },
-    { id: 'hf0',    type: 'highfive', label: 'High five kid',  amount: 40 },
+    { id: 'feed',   type: 'feed',     label: 'Feed the baby',   amount: 8 },
+    { id: 'cuddle', type: 'cuddle',   label: 'Cuddle the baby', amount: 16 },
+    { id: 'hf0',    type: 'highfive', label: 'High five baby',  amount: 3 },
   ],
 };
 const APP = 'enfants-champignons';
@@ -158,7 +158,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     } else if (msg.type === 'simulate') {
       const a = s.actions.find((x) => x.id === msg.action);
       const ev = msg.action === 'reset' || !a ? { type: 'reset' }
-        : { type: a.type, kid: a.kid, user: msg.user || 'Tester', amount: Number(a.amount) || 0 };
+        : { type: a.type, kid: a.kid, user: msg.user || 'Phi', amount: Number(a.amount) || 0 };
       try { await sendToOBS(ev); await log({ user: ev.user || '—', amount: ev.amount || 0, action: msg.action, sent: true, simulated: true }); reply({ ok: true }); }
       catch (e) { reply({ ok: false, error: e.message }); }
     } else if (msg.type === 'reconnect') {
