@@ -181,8 +181,8 @@
 </style>
 </head>
 <body>
-<div id="help"><b>F</b> Feed the kid (+25 tk) · <b>C</b> Cuddle the kid (+50 tk) · <b>H</b> High five (+40 tk) · OBS: <span id="obsState">…</span><br>
-Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 200 tk</div>
+<div id="help"><b>F</b> Feed the baby (+8 tk) · <b>C</b> Cuddle the baby (+16 tk) · <b>H</b> High five baby (+3 tk) · OBS: <span id="obsState">…</span><br>
+Warmth gauge: <b>1</b>–<b>9</b> set it to 10–90% · <b>0</b> empty it · <b>+</b> add 20 tk</div>
 <div id="home">
   <div id="bubble"></div>
   <div id="stage"></div>
@@ -197,7 +197,7 @@ const CONFIG = {
   kids: [
     { name: "", cap: "#a27b5c", size: 1.1 },   // un seul champignon, chapeau marron comme la peluche (name : affiché dessous si rempli)
   ],
-  heatMaxTokens: 2000,   // jauge pleine après 2000 tokens (réglable dans l'extension)
+  heatMaxTokens: 200,    // jauge pleine après 200 tokens (réglable dans l'extension)
   coldBelow: 10,         // en dessous de 10 % : il a froid et frissonne
   hotAbove: 80,          // au-dessus de 80 % : la jauge rougeoie
   moods: [45, 60, 70, 90],   // paliers de joie au repos : comfy dès 45 %, cosy dès 60 %, happy dès 70 %, blissful dès 90 %
@@ -756,12 +756,12 @@ if (params.has("test")) {
   document.body.classList.add("test");
   addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
-    if (k === "f") kids.feed("Tester", 25);
-    if (k === "c") kids.cuddle("Tester", 50);
-    if (k === "h") kids.highfive("Tester", 40);
+    if (k === "f") kids.feed("Phi", 8);
+    if (k === "c") kids.cuddle("Phi", 16);
+    if (k === "h") kids.highfive("Phi", 3);
     if (k === "0") kids.reset();
     if (/^[1-9]$/.test(k)) { heatTokens = CONFIG.heatMaxTokens * Number(k) / 10; save(); render(); }   // 1-9 = 10-90 %
-    if (k === "+") { addHeat(200); }
+    if (k === "+") { addHeat(20); }
   });
 }
 

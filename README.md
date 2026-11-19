@@ -22,7 +22,7 @@ Nothing else needs to be installed, and nothing leaves the computer.
 
 ## Moods
 
-The warmth gauge only goes up with Feed and Cuddle tips, by the number of tokens tipped. It is full at 2000 tokens by default (set in the extension popup). It never goes down by itself.
+The warmth gauge only goes up with Feed and Cuddle tips, by the number of tokens tipped. It is full at 200 tokens by default (set in the extension popup). It never goes down by itself.
 
 | Warmth | Mood |
 |---|---|

@@ -66,7 +66,7 @@ async function load() {
   }
   $('obsPassword').value = s.obsPassword || '';
   $('obsPort').value = s.obsPort || 4455;
-  $('heatMax').value = s.heatMax || 2000;
+  $('heatMax').value = s.heatMax || 200;
 }
 
 async function save() {
@@ -74,7 +74,7 @@ async function save() {
     actions: DEFAULT_ACTIONS.map((d) => ({ ...d, label: $(d.id + 'Label').value.trim(), amount: Number($(d.id + 'Amount').value) || 0 })),
     obsPassword: $('obsPassword').value,
     obsPort: Number($('obsPort').value) || 4455,
-    heatMax: Math.max(1, Number($('heatMax').value) || 2000),
+    heatMax: Math.max(1, Number($('heatMax').value) || 200),
   });
   $('saved').textContent = t('saved');
   setTimeout(() => ($('saved').textContent = ''), 1500);

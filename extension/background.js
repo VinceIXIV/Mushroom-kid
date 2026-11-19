@@ -5,7 +5,7 @@
 const DEFAULTS = {
   obsPort: 4455,
   obsPassword: '',
-  heatMax: 2000,     // tokens pour remplir la jauge de chaleur à 100 %
+  heatMax: 200,      // tokens pour remplir la jauge de chaleur à 100 %
   // id : identifiant du réglage (un seul champignon)
   actions: [
     // label : phrase à repérer dans le tip menu ; amount : tokens ajoutés à la jauge (le prix de l'item dans son menu)
@@ -85,7 +85,7 @@ async function sendToOBS(eventData) {
   const { heatMax } = await getSettings();
   ws.send(JSON.stringify({
     op: 6,
-    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax: Number(heatMax) || 2000, ...eventData } } },
+    d: { requestType: 'BroadcastCustomEvent', requestId: String(++reqId), requestData: { eventData: { app: APP, heatMax: Number(heatMax) || 200, ...eventData } } },
   }));
 }
 
