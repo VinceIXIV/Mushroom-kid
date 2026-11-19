@@ -5,15 +5,16 @@
 // depuis la page GitHub et le range dans chrome.storage.local ; on le relit ici.
 (() => {
   const DEFAULT_RULES = {
-    // ligne de tip (côté viewer en 2026 : <div data-message-id class="TipMessage#xx … m-bg-tip-v2 message">)
-    row: ['.message[class*="TipMessage"]', '[data-message-id][class*="TipMessage"]',
-          '.m-bg-tip-v2', '.m-bg-public-tip', '[class*="tip-message"]'],
-    // repère « tip du tip menu » (la pastille « Menu des pourboires » / « Menu tiền bo » / « Tip Menu »)
-    menu: ['[class*="commentTipMenu"]', '[class*="tipMenuLink"]', '[class*="TipMenuLink"]', '[class*="TipMenu"]', '[class*="tip-menu"]'],
+    // ligne de tip
+    //  côté streameuse (2026) : <div data-message-id data-username data-amount class="m-bg-tip-menu-tip message tip-message tip_item">
+    //  côté viewer (2026)     : <div data-message-id class="TipMessage#xx … m-bg-tip-v2 message">
+    row: [".m-bg-tip-menu-tip", "[data-message-id].tip-message", "[data-message-id][data-amount]", ".message[class*=\"TipMessage\"]", "[data-message-id][class*=\"TipMessage\"]", ".m-bg-tip-v2", ".m-bg-public-tip", "[class*=\"tip-message\"]"],
+    // repère « tip du tip menu » (la pastille « Menu des pourboires » / « Menu tiền bo »)
+    menu: [".tip-menu", "[class*=\"commentTipMenu\"]", "[class*=\"tipMenuLink\"]", "[class*=\"TipMenuLink\"]", "[class*=\"TipMenu\"]", "[class*=\"tip-menu\"]"],
     // texte de l'item (ou message du tipeur)
-    comment: ['[class*="TipMessage__commentBody"]', '[class*="commentBody"]', '.tip-comment', '[class*="TipMessage__comment"]'],
-    user: ['.user-levels-username-text', '.message-username', '.username', '[class*="username"]'],
-    amount: ['[class*="TipMessage__amount"]', '[class*="amountHighlight"]'],
+    comment: [".tip-comment-body", "[class*=\"TipMessage__commentBody\"]", "[class*=\"commentBody\"]", ".tip-comment", "[class*=\"TipMessage__comment\"]"],
+    user: [".user-levels-username-text", ".message-username", ".username", "[class*=\"username\"]"],
+    amount: [".tip-amount-highlight", "[class*=\"TipMessage__amount\"]", "[class*=\"amountHighlight\"]"],
     delay: 400,   // ms : on lit la ligne un peu après son apparition (elle peut se remplir en deux temps)
   };
   let R = DEFAULT_RULES;
@@ -42,10 +43,10 @@
   function parse(row) {
     const text = clean(row.innerText || row.textContent);
     const userEl = first(row, R.user);
-    const user = clean(userEl && userEl.textContent) || 'someone';
+    const user = clean(row.dataset.username) || clean(userEl && userEl.textContent) || 'someone';
     const amountEl = first(row, R.amount);
     const m = (amountEl && amountEl.textContent.match(/(\d[\d\s., ]*)/)) || text.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jt|jts|jetons?)\b/i);
-    const amount = m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0;
+    const amount = Number(row.dataset.amount) || (m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0);
     const commentEl = first(row, R.comment);
     const comment = clean(commentEl && (commentEl.innerText || commentEl.textContent));
     // tip du tip menu : repère connu, ou un bouton dont le texte contient « menu » (toutes langues)
