@@ -51,7 +51,8 @@
     const comment = clean(commentEl && (commentEl.innerText || commentEl.textContent));
     // tip du tip menu : repère connu, ou un bouton dont le texte contient « menu » (toutes langues)
     const menu = !!first(row, R.menu) || [...row.querySelectorAll('button, a')].some((b) => /menu/i.test(b.textContent || ''));
-    return { user, amount, menu, comment: comment.slice(0, 200), text: text.slice(0, 300) };
+    const id = row.dataset.messageId || '';   // identique dans tous les onglets : sert à ignorer les doublons
+    return { id, user, amount, menu, comment: comment.slice(0, 200), text: text.slice(0, 300) };
   }
 
   const seen = new WeakSet();
@@ -107,7 +108,8 @@
         const m = t.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jt|jts|jetons?)\b/i);
         // pseudo : repère connu, sinon le premier mot du message
         const userEl = first(n, R.user);
-        const tip = { user: clean(userEl && userEl.textContent) || (t.split(' ')[0] || 'someone').slice(0, 32), amount: m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0, menu: false, comment: '', text: t.slice(0, 300) };
+        const idEl = safe(() => n.closest('[data-message-id]'));
+        const tip = { id: (idEl && idEl.dataset.messageId) || '', user: clean(userEl && userEl.textContent) || (t.split(' ')[0] || 'someone').slice(0, 32), amount: m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0, menu: false, comment: '', text: t.slice(0, 300) };
         const now = Date.now();
         for (const [k, v] of recent) if (now - v > 3000) recent.delete(k);
         if (recent.has(tip.text)) return;

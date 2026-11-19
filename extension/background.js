@@ -128,8 +128,27 @@ async function diag(update) {
   await chrome.storage.session.set({ diag: d });
 }
 
+/* ---------------- Doublons ----------------
+   Le même tip peut être vu plusieurs fois : deux onglets Stripchat de la room (page de diffusion + page viewer),
+   plusieurs cadres, ou les deux méthodes de détection. On ne l'anime qu'une fois.
+   - avec un identifiant de message (data-message-id) : doublon seulement si on a déjà vu cet identifiant ;
+   - sans identifiant : doublon si même pseudo et même montant il y a moins de 8 s. */
+const recentTips = new Map();
+function isDuplicateTip(msg) {
+  const now = Date.now();
+  for (const [k, t] of recentTips) if (now - t > 8000) recentTips.delete(k);
+  const sig = 'sig:' + String(msg.user || '').toLowerCase() + '|' + msg.amount;
+  const id = msg.id ? 'id:' + msg.id : '';
+  if (id ? recentTips.has(id) : recentTips.has(sig)) return true;
+  if (id) recentTips.set(id, now);
+  recentTips.set(sig, now);
+  return false;
+}
+
 /* ---------------- Messages (content script et popup) ---------------- */
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  // vérifié tout de suite (avant toute attente), pour que deux onglets simultanés ne passent pas tous les deux
+  if (msg.type === 'tip' && isDuplicateTip(msg)) { reply({ ok: true, duplicate: true }); return true; }
   (async () => {
     const s = await getSettings();
     if (msg.type === 'hello') {
