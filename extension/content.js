@@ -104,8 +104,9 @@
       if (labels.some((l) => nt.includes(l))) {
         done.add(n);
         const m = t.match(/(\d[\d\s.,]*)\s*(?:tk|tks|tokens?|jt|jts|jetons?)\b/i);
+        // pseudo : repère connu, sinon le premier mot du message
         const userEl = first(n, R.user);
-        const tip = { user: clean(userEl && userEl.textContent) || (t.split(' ')[0] || 'someone').slice(0, 32),   // sinon : le premier mot, le pseudo amount: m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0, menu: false, comment: '', text: t.slice(0, 300) };
+        const tip = { user: clean(userEl && userEl.textContent) || (t.split(' ')[0] || 'someone').slice(0, 32), amount: m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0, menu: false, comment: '', text: t.slice(0, 300) };
         const now = Date.now();
         for (const [k, v] of recent) if (now - v > 3000) recent.delete(k);
         if (recent.has(tip.text)) return;
